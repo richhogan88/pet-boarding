@@ -48,6 +48,11 @@ label{display:grid;gap:6px;font-size:14px;font-weight:600}
 .block .pill{background:#e8ecf0;color:#48545c}
 
 /* Today */
+.dayRow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+.dayPick{position:relative;display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-weight:inherit}
+.dayPick h2{margin:0}
+.calIcon{font-size:20px}
+#todayDate{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;min-height:0}
 .today{margin-bottom:26px}
 .todayGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .todayCard{border-top:4px solid #269575}
@@ -184,11 +189,14 @@ legend{font-weight:700;padding:0 6px}
   <!-- TODAY + CAGES -->
   <section data-panel="cages">
     <div class="today">
-      <h2 id="todayTitle">Today</h2>
+      <div class="dayRow">
+        <label class="dayPick" title="Choose a date"><h2 id="todayTitle">Today</h2><span class="calIcon" aria-hidden="true">📅</span><input type="date" id="todayDate" aria-label="Choose a date"></label>
+        <button type="button" class="small" id="backToday" hidden>Back to today</button>
+      </div>
       <div class="todayGrid">
         <div class="card todayCard"><h3>Check-ins <span class="count" id="inCount">0</span></h3><div id="inList"></div></div>
         <div class="card todayCard out"><h3>Check-outs <span class="count" id="outCount">0</span></h3><div id="outList"></div></div>
-        <div class="card todayCard stay"><h3>Staying tonight <span class="count" id="stayCount">0</span></h3><div id="stayList"></div></div>
+        <div class="card todayCard stay"><h3>Cages in use <span class="count" id="stayCount">0</span></h3><div id="stayList"></div></div>
       </div>
     </div>
     <div class="tabs" id="sections">
@@ -644,35 +652,43 @@ function render() {
 }
 
 function renderToday() {
-  const t = today(), tn = dayNum_(t);
-  $('todayTitle').textContent = 'Today · ' + prettyDay(t);
+  // The summary follows the page's date (the calendar on the heading and the cage calendar share it).
+  const now = today(), t = $('day').value || now, tn = dayNum_(t), isToday = t === now, past = tn < dayNum_(now);
+  $('todayTitle').textContent = (isToday ? 'Today · ' : '') + prettyDay(t);
+  $('todayDate').value = t;
+  $('backToday').hidden = isToday;
+  const onDay = isToday ? 'today' : 'on this day';
   const item = (b, late, action) => `<div class="item"><button class="link" data-booking="${esc(b.ID)}"><strong>${late ? '' : clock(late === false ? b['Check in'] : b['Check out']) + ' · '}${petText(b)}</strong><br><span class="muted">${esc(b.Cage)} · ${esc(b.Owner)} · ${esc(b.Phone)}</span></button><span>${late ? '<span class="pill late">' + late + '</span> ' : ''}${action}</span></div>`;
-  // Check-ins: arriving today, plus bookings that should have arrived already but are still "Booked".
+  // Check-ins on the day, plus (today only) bookings that should have arrived already but are still "Booked".
   const ins = data.bookings.filter(b => b.Status !== 'Cancelled' && b['Check in'].slice(0, 10) === t)
     .sort((a, b) => a['Check in'].localeCompare(b['Check in']));
-  const lateIns = data.bookings.filter(b => b.Status === 'Booked' && dayNum_(b['Check in']) < tn && dayNum_(b['Check out']) >= tn);
+  const lateIns = isToday ? data.bookings.filter(b => b.Status === 'Booked' && dayNum_(b['Check in']) < tn && dayNum_(b['Check out']) >= tn) : [];
   $('inCount').textContent = ins.length;
   $('inList').innerHTML = [
     ...lateIns.map(b => item(b, 'Not arrived · ' + prettyDay(b['Check in'].slice(0, 10), { day: 'numeric', month: 'short' }), `<button class="small" data-act="Checked in" data-id="${esc(b.ID)}">Check in</button>`)),
     ...ins.map(b => item(b, false, b.Status === 'Booked' ? `<button class="small" data-act="Checked in" data-id="${esc(b.ID)}">Check in</button>` : statusPill(b.Status))),
-  ].join('') || '<p class="muted">No check-ins today.</p>';
-  // Check-outs: leaving today, plus pets still checked in after their checkout date.
+  ].join('') || `<p class="muted">No check-ins ${onDay}.</p>`;
+  // Check-outs on the day, plus (today only) pets still checked in after their checkout date.
   const outs = data.bookings.filter(b => b.Status !== 'Cancelled' && b['Check out'].slice(0, 10) === t)
     .sort((a, b) => a['Check out'].localeCompare(b['Check out']));
-  const lateOuts = data.bookings.filter(b => b.Status === 'Checked in' && dayNum_(b['Check out']) < tn);
+  const lateOuts = isToday ? data.bookings.filter(b => b.Status === 'Checked in' && dayNum_(b['Check out']) < tn) : [];
   $('outCount').textContent = outs.length;
   $('outList').innerHTML = [
     ...lateOuts.map(b => item(b, 'Overdue · ' + prettyDay(b['Check out'].slice(0, 10), { day: 'numeric', month: 'short' }), `<button class="small" data-act="Checked out" data-id="${esc(b.ID)}">Check out</button>`)),
     ...outs.map(b => item(b, null, b.Status === 'Checked in' ? `<button class="small" data-act="Checked out" data-id="${esc(b.ID)}">Check out</button>` : statusPill(b.Status))),
-  ].join('') || '<p class="muted">No check-outs today.</p>';
-  // Staying tonight: cages occupied by an active booking covering tonight.
+  ].join('') || `<p class="muted">No check-outs ${onDay}.</p>`;
+  // Cages in use: any cage with a pet in it during the day — including pets checking out that day
+  // (until staff press Check out). Past days also count stays that have since been checked out.
+  // Overdue pets (still checked in after their checkout date) are still in their cage today.
+  const inUse = b => (b.Status !== 'Cancelled' && (past || isActive(b)) && dayNum_(b['Check in']) <= tn && dayNum_(b['Check out']) >= tn)
+    || (isToday && b.Status === 'Checked in' && dayNum_(b['Check in']) <= tn);
   let total = 0;
   $('stayList').innerHTML = ['Ground', 'Upper', 'Cat'].map(s => {
     const cages = data.cages.filter(c => c.Floor === s);
-    const used = cages.filter(c => data.bookings.some(b => b.Cage === c.Cage && isActive(b) && dayNum_(b['Check in']) <= tn && dayNum_(b['Check out']) > tn)).length;
+    const used = cages.filter(c => data.bookings.some(b => b.Cage === c.Cage && inUse(b))).length;
     total += used;
     return `<div class="stayRow"><span>${SECTION_LABEL[s]}</span><strong>${used} / ${cages.length} cages</strong></div>`;
-  }).join('') + `<p class="muted">Balance due on today's check-outs: ${money(outs.filter(b => b.Status !== 'Cancelled').reduce((n, b) => n + Math.max(0, Number(b['Balance RM']) || 0), 0))}</p>`;
+  }).join('') + `<p class="muted">Includes pets checking out ${onDay}.</p><p class="muted">Balance due on ${isToday ? "today's" : "this day's"} check-outs: ${money(outs.reduce((n, b) => n + Math.max(0, Number(b['Balance RM']) || 0), 0))}</p>`;
   $('stayCount').textContent = total;
 }
 
@@ -1222,6 +1238,10 @@ function shiftReport(dir) {
 $('reportPrev').onclick = () => shiftReport(-1);
 $('reportNext').onclick = () => shiftReport(1);
 for (const id of ['day', 'from', 'until', 'to', 'filter', 'bookingSection', 'bookingStatus', 'reportDay']) $(id).onchange = render;
+// Calendar on the "Today" heading: picking a date switches the whole screen to that day.
+$('todayDate').onchange = () => { if ($('todayDate').value) { $('day').value = $('todayDate').value; render(); } };
+$('todayDate').onclick = () => { try { $('todayDate').showPicker(); } catch (e) { /* older browsers open it on tap anyway */ } };
+$('backToday').onclick = () => { $('day').value = today(); render(); };
 for (const id of ['bookingSearch', 'customerSearch']) $(id).oninput = render;
 // Booked cage → summary first; empty cage → straight to a new booking for that cage.
 $('grid').onclick = e => { const card = e.target.closest('[data-cage]'); if (!card) return; if (card.dataset.booking) openView(card.dataset.booking); else openBooking(null, card.dataset.cage); };
