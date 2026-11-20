@@ -1,0 +1,1266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script>window.API_URL = "https://script.google.com/macros/s/AKfycbx7VSeg2mhxGHB8Gw9rrsh3702tHs1-WTcvKBd3-Ui6Zz9I-i897I2GFNNXVWrDyhuOYQ/exec";</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pet Boarding">
+<meta name="theme-color" content="#153d45">
+<meta name="robots" content="noindex">
+<title>Pet Boarding</title>
+<style>
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:#f3f6f8;color:#162c37;font:16px system-ui,sans-serif}
+header{background:#153d45;color:#fff;padding:20px 5% 14px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+h1{font-size:26px;margin:0}
+header small{color:#bfd8dc}
+h2{font-size:22px;margin:0 0 14px}
+h3{font-size:17px;margin:0 0 10px}
+.views{background:#153d45;padding:0 5% 14px;display:flex;gap:8px;overflow-x:auto}
+.views button{background:transparent;color:#d9ecef;border-color:#3f6a72;white-space:nowrap}
+.views button.selected{background:#fff;color:#153d45;border-color:#fff}
+main{max-width:1250px;margin:auto;padding:24px 28px 40px}
+button,input,select,textarea,.button{font:inherit;border-radius:9px;border:1px solid #bccbd1;padding:10px 12px;min-height:44px}
+button,.button{cursor:pointer;background:#fff;color:#173e46;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+button.primary,button.selected{background:#176859;color:#fff;border-color:#176859}
+.button.wa{background:#1f9d55;color:#fff;border-color:#1f9d55}
+.button.wa.off{opacity:.5}
+button.danger{color:#a02b25;border-color:#e2b7b3}
+button.small{min-height:34px;padding:5px 10px;font-size:14px;white-space:nowrap}
+.item>span:last-child{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+button:disabled{opacity:.5;cursor:wait}
+input,select,textarea{background:#fff;color:inherit}
+.toolbar,.tabs{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-bottom:18px}
+.tabs{border-bottom:1px solid #d7e1e5;padding-bottom:16px}
+label{display:grid;gap:6px;font-size:14px;font-weight:600}
+.card{background:#fff;border:1px solid #d7e1e5;border-radius:12px;padding:18px}
+.muted{color:#58707c;font-size:14px}
+#notice{padding:0 0 12px;color:#8b341b}
+#notice:empty{display:none}
+.pill{display:inline-block;background:#e5f4ed;color:#23654f;padding:3px 9px;border-radius:6px;font-size:13px;font-weight:600}
+.pill.Booked,.busy .pill{background:#fff1dc;color:#87501e}
+.pill.Checked.in{background:#dcebff;color:#204f86}
+.pill.Cancelled{background:#fbe4e2;color:#94302a}
+.pill.late{background:#fbe4e2;color:#94302a}
+.block .pill{background:#e8ecf0;color:#48545c}
+
+/* Today */
+.today{margin-bottom:26px}
+.todayGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.todayCard{border-top:4px solid #269575}
+.todayCard.out{border-top-color:#c17536}
+.todayCard.stay{border-top-color:#3b6fb0}
+.todayCard h3{display:flex;justify-content:space-between;align-items:center}
+.count{font-size:26px;color:#153d45}
+.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #eef2f4}
+.item .link{border:0;padding:0;min-height:0;background:none;text-align:left;font-weight:400;display:block;color:inherit}
+.item .link strong{font-weight:700}
+.stayRow{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid #eef2f4}
+
+/* Cages */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:14px}
+.cage{text-align:left;background:#fff;border:1px solid #d7e1e5;border-top:4px solid #269575;border-radius:12px;padding:18px;min-height:180px;display:block;width:100%}
+.cage.busy{border-top-color:#c17536}
+.cage.block{border-top-color:#78858f}
+.cage h3{font-size:25px;margin:0 0 10px}
+.cage p{font-size:14px;line-height:1.6;margin:8px 0;font-weight:400}
+#summary{margin:6px 0 14px}
+.list{display:grid;gap:10px}
+.record{text-align:left;padding:14px 16px;background:#fff;display:block;width:100%;font-weight:400;line-height:1.55}
+.record strong{font-weight:700}
+
+/* Reports */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+.tile .big{font-size:26px;font-weight:700;color:#153d45;margin:4px 0}
+.bar{height:10px;background:#e7eef1;border-radius:6px;overflow:hidden;margin:6px 0 2px}
+.bar span{display:block;height:100%;background:#269575}
+.cancelBox{border-left:4px solid #c0473e}
+.tableWrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;background:#fff;font-size:14px}
+th,td{padding:9px 10px;border-bottom:1px solid #e3eaed;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{background:#eef3f5}
+
+/* Manage */
+.manageGrid{display:grid;grid-template-columns:minmax(280px,420px) 1fr;gap:18px;align-items:start}
+.priceGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.twoCol{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:16px;align-items:start}
+.cageRow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #eef2f4}
+
+/* Dialogs */
+dialog{border:0;border-radius:16px;width:min(880px,96vw);max-height:92vh;padding:24px;box-shadow:0 20px 80px #102b4260}
+dialog.narrow{width:min(520px,96vw)}
+dialog::backdrop{background:#102b4270}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.full{grid-column:1/-1}
+textarea{width:100%;min-height:80px;resize:vertical}
+fieldset{border:1px solid #d7e1e5;border-radius:12px;padding:14px;margin:0}
+legend{font-weight:700;padding:0 6px}
+#breakdown{min-height:280px;background:#f2f6f7;font:15px/1.6 ui-monospace,monospace}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.close{float:right}
+.error{color:#a02b25;white-space:pre-wrap}
+.found{display:grid;gap:6px;margin-top:6px}
+.found button{justify-content:flex-start;text-align:left;font-weight:400}
+.linked{background:#e5f4ed;border-radius:8px;padding:8px 12px;font-size:14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+.sizes{display:flex;gap:14px;flex-wrap:wrap}
+.sizes label{display:flex;gap:6px;align-items:center;font-weight:400}
+.sizes input{min-height:0}
+#updated{font-size:13px;color:#58707c;margin-top:20px}
+
+/* Lock screen */
+#lock{position:fixed;inset:0;z-index:50;background:#153d45;display:flex;align-items:center;justify-content:center;padding:16px}
+.lockBox{background:#fff;border-radius:18px;padding:32px 28px;width:min(360px,100%);text-align:center;display:grid;gap:12px}
+.lockBox h1{color:#153d45;font-size:24px}
+.lockBox p{margin:0}
+.lockIcon{font-size:34px}
+#pinInput{font-size:28px;letter-spacing:.4em;text-align:center;padding:12px}
+
+/* Read-only summaries */
+.sumHead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 4px}
+.sumHead h2{margin:0}
+.sumSub{color:#58707c;margin:0 0 18px}
+.sumGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sumBox{background:#f5f8f9;border-radius:12px;padding:14px 16px}
+.sumBox h3{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:#58707c;margin:0 0 8px}
+.row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:15px}
+.row span:first-child{color:#58707c}
+.row strong{text-align:right}
+.row.total{border-top:1px solid #d7e1e5;margin-top:4px;padding-top:9px;font-size:17px}
+.row.due strong{color:#a0461d}
+.note{white-space:pre-wrap;font-size:15px;margin:0}
+.big{font-size:17px;font-weight:700;margin:0 0 4px}
+@media(max-width:600px){.sumGrid{grid-template-columns:1fr}}
+
+@media(max-width:800px){
+  .todayGrid,.manageGrid,.twoCol{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  main{padding:16px}
+  header{padding:16px 16px 12px}
+  .views{padding:0 16px 12px}
+  h1{font-size:21px}
+  .formgrid,.priceGrid{grid-template-columns:1fr}
+  .full{grid-column:auto}
+  .grid{grid-template-columns:1fr 1fr;gap:10px}
+  .cage{padding:12px;min-height:170px}
+  .cage h3{font-size:21px}
+  dialog{padding:16px}
+  .toolbar label{flex:1 1 40%}
+  .toolbar input,.toolbar select{width:100%}
+}
+</style>
+</head>
+<body>
+<div id="lock" hidden>
+  <form id="lockForm" class="lockBox" autocomplete="off">
+    <div class="lockIcon">🔒</div>
+    <h1>Pet Boarding</h1>
+    <p class="muted" id="lockText">Enter the staff PIN to continue</p>
+    <input id="pinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="••••" aria-label="Staff PIN" autocomplete="off">
+    <input id="pinInput2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="Type it again" aria-label="Type the PIN again" autocomplete="off" hidden>
+    <p id="pinError" class="error" role="alert"></p>
+    <button class="primary" id="unlockBtn">Unlock</button>
+  </form>
+</div>
+<header>
+  <div><h1>Pet Boarding</h1><small>Bookings & cage availability</small></div>
+  <div style="display:flex;gap:8px"><button id="refresh">Refresh</button><button id="lockNow" hidden>Lock</button></div>
+</header>
+<nav class="views" id="views">
+  <button data-view="cages" class="selected">Today & cages</button>
+  <button data-view="bookings">Bookings</button>
+  <button data-view="customers">Customers</button>
+  <button data-view="reports">Reports</button>
+  <button data-view="manage">Prices & cages</button>
+</nav>
+<main>
+  <div id="notice" role="status">Loading bookings…</div>
+
+  <!-- TODAY + CAGES -->
+  <section data-panel="cages">
+    <div class="today">
+      <h2 id="todayTitle">Today</h2>
+      <div class="todayGrid">
+        <div class="card todayCard"><h3>Check-ins <span class="count" id="inCount">0</span></h3><div id="inList"></div></div>
+        <div class="card todayCard out"><h3>Check-outs <span class="count" id="outCount">0</span></h3><div id="outList"></div></div>
+        <div class="card todayCard stay"><h3>Staying tonight <span class="count" id="stayCount">0</span></h3><div id="stayList"></div></div>
+      </div>
+    </div>
+    <div class="tabs" id="sections">
+      <button data-section="Ground" class="selected">Dogs · Ground floor</button>
+      <button data-section="Upper">Dogs · 1st floor</button>
+      <button data-section="Cat">Cats</button>
+    </div>
+    <div class="toolbar">
+      <label>Calendar date<input id="day" type="date"></label>
+      <label>From<input id="from" type="time" value="09:30"></label>
+      <label>Until date (optional)<input id="until" type="date"></label>
+      <label>Until time<input id="to" type="time" value="17:00"></label>
+    </div>
+    <div class="toolbar">
+      <label>Show<select id="filter"><option>All cages</option><option>Available</option><option>Booked</option><option>Checked in</option><option>Checkouts</option><option>Out of service</option></select></label>
+      <button id="new" class="primary">New booking</button>
+      <button id="block">Out of service</button>
+    </div>
+    <h2 id="summary"></h2>
+    <div id="grid" class="grid"></div>
+  </section>
+
+  <!-- BOOKINGS -->
+  <section data-panel="bookings" hidden>
+    <div class="toolbar">
+      <label style="flex:2 1 260px">Search<input id="bookingSearch" type="search" placeholder="Pet, owner, phone or cage"></label>
+      <label>Section<select id="bookingSection"><option value="">All</option><option value="Ground">Dogs · Ground floor</option><option value="Upper">Dogs · 1st floor</option><option value="Cat">Cats</option></select></label>
+      <label>Status<select id="bookingStatus"><option value="">All</option><option>Booked</option><option>Checked in</option><option>Checked out</option><option>Cancelled</option></select></label>
+      <button class="primary" id="new2">New booking</button>
+    </div>
+    <div id="records" class="list"></div>
+  </section>
+
+  <!-- CUSTOMERS -->
+  <section data-panel="customers" hidden>
+    <div class="toolbar">
+      <label style="flex:2 1 260px">Search customers<input id="customerSearch" type="search" placeholder="Name, phone number or pet name"></label>
+      <button class="primary" id="newCustomer">Add customer</button>
+    </div>
+    <p class="muted" id="customerCount"></p>
+    <div id="customerList" class="list"></div>
+  </section>
+
+  <!-- REPORTS -->
+  <section data-panel="reports" hidden>
+    <div class="toolbar">
+      <div class="tabs" id="reportModes" style="border:0;padding:0;margin:0"><button data-mode="week" class="selected">Weekly</button><button data-mode="month">Monthly</button></div>
+      <button id="reportPrev" aria-label="Previous period">‹</button>
+      <label>Any day in the period<input id="reportDay" type="date"></label>
+      <button id="reportNext" aria-label="Next period">›</button>
+    </div>
+    <div id="reportBody"></div>
+  </section>
+
+  <!-- MANAGE -->
+  <section data-panel="manage" hidden>
+    <div class="manageGrid">
+      <form class="card" id="pricesForm">
+        <h2>Prices</h2>
+        <div class="priceGrid">
+          <label>Small dog (RM / night)<input type="number" min="0" step="0.01" data-rate="Small" required></label>
+          <label>Medium dog (RM / night)<input type="number" min="0" step="0.01" data-rate="Medium" required></label>
+          <label>Large dog (RM / night)<input type="number" min="0" step="0.01" data-rate="Large" required></label>
+          <label>Cat (RM / night)<input type="number" min="0" step="0.01" data-rate="Cat" required></label>
+          <label class="full">Each extra cat in the same cage (RM / night)<input type="number" min="0" step="0.01" data-setting="Extra cat RM per night" required></label>
+          <h3 class="full" style="margin:8px 0 0">Deposit</h3>
+          <label>When the total is up to (RM)<input type="number" min="0" step="0.01" data-setting="Low deposit up to RM" required></label>
+          <label>Deposit (RM)<input type="number" min="0" step="0.01" data-setting="Low deposit RM" required></label>
+          <label>When the total is up to (RM)<input type="number" min="0" step="0.01" data-setting="Higher deposit threshold RM" required></label>
+          <label>Deposit (RM)<input type="number" min="0" step="0.01" data-setting="Standard deposit RM" required></label>
+          <p class="muted" style="margin:0;align-self:center">Above that</p>
+          <label>Deposit (RM)<input type="number" min="0" step="0.01" data-setting="Higher deposit RM" required></label>
+          <p class="muted full" style="margin:0" id="depositRule"></p>
+          <label>Opening time<input type="time" data-setting="Opening time" required></label>
+          <label>Closing time<input type="time" data-setting="Closing time" required></label>
+        </div>
+        <p class="muted">New prices apply to new bookings. Existing bookings keep their price unless the pet type is changed.</p>
+        <p class="error" id="pricesError"></p>
+        <div class="actions"><button class="primary" id="savePrices">Save prices</button><button type="button" id="resetPrices">Undo changes</button></div>
+      </form>
+      <div class="card">
+        <h2>Cages</h2>
+        <div id="cageAdmin"></div>
+      </div>
+      <form class="card" id="pinForm" autocomplete="off">
+        <h2>Staff PIN</h2>
+        <p class="muted" id="pinStatus"></p>
+        <div class="priceGrid">
+          <label>New PIN (4–8 digits)<input name="pin" type="password" inputmode="numeric" pattern="[0-9]{4,8}" maxlength="8" required autocomplete="new-password"></label>
+          <label>Type it again<input name="pin2" type="password" inputmode="numeric" pattern="[0-9]{4,8}" maxlength="8" required autocomplete="new-password"></label>
+        </div>
+        <p class="muted">The app asks for the PIN every time it is opened, and locks itself after 10 minutes without use. Changing the PIN locks every other phone and computer. Use 6 digits or more for better safety.</p>
+        <p class="error" id="pinSetError"></p>
+        <div class="actions"><button class="primary" id="savePin">Change PIN</button></div>
+      </form>
+    </div>
+  </section>
+
+  <p id="updated"></p>
+</main>
+
+<!-- Booking editor -->
+<dialog id="editor">
+  <button class="close" id="close">Close</button>
+  <h2 id="editorTitle">New booking</h2>
+  <form id="bookingForm" autocomplete="off">
+    <div class="formgrid">
+      <div class="full">
+        <label>Find existing customer<input id="custSearch" type="search" placeholder="Type a name, phone number or pet name"></label>
+        <div id="custResults" class="found"></div>
+        <div id="custLinked"></div>
+      </div>
+      <input type="hidden" name="Customer ID">
+      <label>Pet name<input name="Pet" required maxlength="150" list="petList"></label>
+      <datalist id="petList"></datalist>
+      <label>Pet type<select name="Size"><option value="Small">Small dog</option><option value="Medium">Medium dog</option><option value="Large">Large dog</option><option value="Cat">Cat</option></select></label>
+      <label id="petsWrap">Number of cats in this cage<input name="Pets count" type="number" min="1" max="10" step="1" value="1"></label>
+      <label>Owner name<input name="Owner" required maxlength="150"></label>
+      <label>Phone<input name="Phone" type="tel" required maxlength="50"><span id="phoneHint" class="muted"></span></label>
+      <label>Email (optional)<input name="Email" type="email"></label>
+      <label>Cage<select name="Cage"></select></label>
+      <label>Check-in date and time<input name="Check in" type="datetime-local" required></label>
+      <label>Checkout date and time<input name="Check out" type="datetime-local" required></label>
+      <label>Status<select name="Status"><option>Booked</option><option>Checked in</option><option>Checked out</option><option>Cancelled</option></select></label>
+      <p>Customer hours<br><strong id="hours">9:30 am–5:00 pm</strong></p>
+      <label class="full">Care notes<textarea name="Care notes"></textarea></label>
+      <fieldset class="full">
+        <legend>Extra charges</legend>
+        <div class="formgrid">
+          <label>Additional care (RM per night)<input name="Additional care RM per night" type="number" min="0" step="0.01" value="0"></label>
+          <label>Basic grooming (RM)<input name="Grooming RM" type="number" min="0" step="0.01" value="0"></label>
+          <label>Others (RM)<input name="Others RM" type="number" min="0" step="0.01" value="0"></label>
+          <label class="full">Remarks for extra charges<textarea name="Extra remarks" placeholder="e.g. medication twice a day, nail trim"></textarea></label>
+        </div>
+      </fieldset>
+      <label class="full">Payment breakdown<textarea id="breakdown" readonly></textarea></label>
+      <div class="full" id="paymentsBox">
+        <h3>Payments received <span class="muted">(optional)</span></h3>
+        <div id="paymentList"></div>
+        <button type="button" id="payment" class="small">Add payment</button>
+      </div>
+    </div>
+    <p id="formError" class="error" role="alert"></p>
+    <div class="actions">
+      <button class="primary" type="submit" id="save">Save booking</button>
+      <button type="button" id="copy">Copy payment breakdown</button>
+      <a class="button wa" id="whatsapp" target="_blank" rel="noopener" href="#">Send on WhatsApp</a>
+    </div>
+  </form>
+</dialog>
+
+<!-- Booking summary (read-only; Edit opens the editor) -->
+<dialog id="viewer">
+  <button class="close" data-close="viewer">Close</button>
+  <div id="viewBody"></div>
+  <p id="viewError" class="error" role="alert"></p>
+  <div class="actions" id="viewActions"></div>
+</dialog>
+
+<!-- Payment -->
+<dialog id="payDialog" class="narrow">
+  <h2 id="payTitle">Record payment received</h2>
+  <form id="payForm">
+    <div class="formgrid">
+      <label class="full">Amount received (RM)<input name="amount" type="number" min="0.01" step="0.01" required></label>
+      <label class="full">Method<select name="method"><option>Bank transfer</option><option>Cash</option><option>Card</option><option>Other</option></select></label>
+      <label class="full">Note<input name="note"></label>
+    </div>
+    <p id="payError" class="error"></p>
+    <div class="actions"><button class="primary">Save payment</button><button type="button" class="danger" id="payDelete">Delete payment</button><button type="button" data-close="payDialog">Close</button></div>
+  </form>
+</dialog>
+
+<!-- Out of service -->
+<dialog id="blockDialog">
+  <h2>Out of service</h2>
+  <form id="blockForm">
+    <div class="formgrid">
+      <label>Cage<select name="Cage"></select></label>
+      <label>Reason<input name="Reason" required></label>
+      <label>From<input type="datetime-local" name="Start" required></label>
+      <label>Until<input type="datetime-local" name="End" required></label>
+    </div>
+    <p id="blockError" class="error"></p>
+    <div class="actions"><button class="primary">Save service block</button><button type="button" data-close="blockDialog">Close</button></div>
+  </form>
+  <div id="blockList"></div>
+</dialog>
+
+<!-- Customer -->
+<dialog id="customerDialog">
+  <button class="close" data-close="customerDialog">Close</button>
+  <h2 id="customerTitle">Customer</h2>
+  <div id="customerSummary"></div>
+  <form id="customerForm">
+    <div class="formgrid">
+      <label>Name<input name="Name" required maxlength="150"></label>
+      <label>Phone<input name="Phone" type="tel" required maxlength="50"></label>
+      <label>Email<input name="Email" type="email"></label>
+      <label>Pets<input name="Pets" placeholder="e.g. Max, Luna"></label>
+      <label class="full">Notes<textarea name="Notes"></textarea></label>
+    </div>
+    <p id="customerError" class="error"></p>
+    <div class="actions"><button class="primary">Save customer</button><button type="button" id="customerCancel">Cancel</button></div>
+  </form>
+  <h3 style="margin-top:22px">Stays</h3>
+  <div id="customerBookings" class="list"></div>
+</dialog>
+
+<!-- Cage -->
+<dialog id="cageDialog" class="narrow">
+  <h2 id="cageTitle">Cage</h2>
+  <form id="cageForm">
+    <div class="formgrid">
+      <label class="full">Cage ID<input name="Cage" required maxlength="20" pattern="[A-Za-z0-9][A-Za-z0-9 _\-]{0,19}"></label>
+      <label class="full">Section<select name="Floor"><option value="Ground">Dogs · Ground floor</option><option value="Upper">Dogs · 1st floor</option><option value="Cat">Cats</option></select></label>
+      <div class="full"><strong style="font-size:14px">Fits</strong>
+        <div class="sizes">
+          <label><input type="checkbox" name="Sizes" value="Small">Small dog</label>
+          <label><input type="checkbox" name="Sizes" value="Medium">Medium dog</label>
+          <label><input type="checkbox" name="Sizes" value="Large">Large dog</label>
+          <label><input type="checkbox" name="Sizes" value="Cat">Cat</label>
+        </div>
+      </div>
+    </div>
+    <p class="muted" id="cageNote"></p>
+    <p id="cageError" class="error"></p>
+    <div class="actions"><button class="primary">Save cage</button><button type="button" class="danger" id="cageDelete">Delete cage</button><button type="button" data-close="cageDialog">Close</button></div>
+  </form>
+</dialog>
+
+<script>
+function round2_(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+function dayNum_(s) { return Math.round(Date.parse(String(s).slice(0, 10) + 'T00:00Z') / 86400000); }
+function dayStr_(n) { return new Date(n * 86400000).toISOString().slice(0, 10); }
+function nights_(checkIn, checkOut) { return dayNum_(checkOut) - dayNum_(checkIn); }
+function settingsMap_(rows) { return Object.fromEntries(rows.map(r => [r.Setting, r.Value])); }
+function sectionOf_(booking, cages) {
+  const cage = cages.find(c => c.Cage === booking.Cage);
+  if (cage) return cage.Floor;
+  return booking.Size === 'Cat' ? 'Cat' : booking.Size === 'Small' ? 'Ground' : 'Upper';
+}
+function depositFor_(total, settings) {
+  const num = (k, d) => (settings[k] === '' || settings[k] === undefined || settings[k] === null || !Number.isFinite(Number(settings[k])) ? d : Number(settings[k]));
+  const lowUpTo = num('Low deposit up to RM', -1), high = num('Higher deposit threshold RM', Infinity);
+  const deposit = total <= lowUpTo ? num('Low deposit RM', 0) : total <= high ? num('Standard deposit RM', 0) : num('Higher deposit RM', 0);
+  return Math.min(total, deposit);
+}
+function price_(b, rate, extraPet, settings) {
+  const nights = nights_(b['Check in'], b['Check out']);
+  const pets = b.Size === 'Cat' ? Math.max(1, Math.floor(Number(b['Pets count']) || 1)) : 1;
+  const care = round2_(b['Additional care RM per night']);
+  const grooming = round2_(b['Grooming RM']);
+  const others = round2_(b['Others RM']);
+  const nightly = round2_(Number(rate) + (pets - 1) * Number(extraPet || 0));
+  const boarding = round2_(nights * nightly);
+  const careTotal = round2_(nights * care);
+  const extras = round2_(careTotal + grooming + others);
+  const total = round2_(boarding + extras);
+  const deposit = depositFor_(total, settings);
+  return { nights, pets, rate: Number(rate), extraPet: Number(extraPet || 0), nightly, boarding, care, careTotal, grooming, others, extras, total, deposit };
+}
+function phoneKey_(p) { return String(p || '').replace(/\D/g, '').replace(/^(60|0)/, ''); }
+function waNumber_(p) {
+  const d = String(p || '').replace(/\D/g, '');
+  if (d.length < 8) return '';
+  if (d.startsWith('60')) return d;
+  if (d.startsWith('0')) return '6' + d;
+  if (/^1\d{8,9}$/.test(d)) return '60' + d;
+  return d;
+}
+function report_(data, from, to) {
+  const start = dayNum_(from), end = dayNum_(to);
+  const blank = () => ({ Ground: 0, Upper: 0, Cat: 0 });
+  const days = [];
+  for (let d = start; d <= end; d++) days.push({ date: dayStr_(d), checkIns: 0, checkOuts: 0, occupied: blank(), income: 0 });
+  const cageCount = blank();
+  data.cages.forEach(c => { cageCount[c.Floor] = (cageCount[c.Floor] || 0) + 1; });
+  const income = { total: 0, boarding: 0, extras: 0, bySection: blank() };
+  const cancelled = { count: 0, value: 0, received: 0 };
+  let bookings = 0;
+  for (const b of data.bookings) {
+    const ci = dayNum_(b['Check in']), co = dayNum_(b['Check out']);
+    if (b.Status === 'Cancelled') {
+      if (ci >= start && ci <= end) {
+        cancelled.count++;
+        cancelled.value += Number(b['Total RM']) || 0;
+        cancelled.received += Number(b['Paid RM']) || 0;
+      }
+      continue;
+    }
+    const nights = co - ci;
+    if (!(nights >= 1)) continue;
+    const section = sectionOf_(b, data.cages);
+    const perNight = (Number(b['Total RM']) || 0) / nights, extrasPerNight = (Number(b['Extras RM']) || 0) / nights;
+    if (ci >= start && ci <= end) { bookings++; days[ci - start].checkIns++; }
+    if (co >= start && co <= end) days[co - start].checkOuts++;
+    for (let d = Math.max(ci, start); d < Math.min(co, end + 1); d++) {
+      const day = days[d - start];
+      day.occupied[section] = (day.occupied[section] || 0) + 1;
+      day.income += perNight;
+      income.total += perNight;
+      income.extras += extrasPerNight;
+      income.bySection[section] = (income.bySection[section] || 0) + perNight;
+    }
+  }
+  income.boarding = income.total - income.extras;
+  for (const k of ['total', 'boarding', 'extras']) income[k] = round2_(income[k]);
+  for (const k of Object.keys(income.bySection)) income.bySection[k] = round2_(income.bySection[k]);
+  days.forEach(d => { d.income = round2_(d.income); });
+  cancelled.value = round2_(cancelled.value);
+  cancelled.received = round2_(cancelled.received);
+  const occupancy = {};
+  let used = 0, capacity = 0;
+  for (const s of Object.keys(cageCount)) {
+    const u = days.reduce((n, d) => n + (d.occupied[s] || 0), 0), c = cageCount[s] * days.length;
+    occupancy[s] = { used: u, capacity: c, rate: c ? u / c : 0 };
+    used += u; capacity += c;
+  }
+  occupancy.all = { used, capacity, rate: capacity ? used / capacity : 0 };
+  return { from, to, days, income, cancelled, bookings, occupancy, cageCount };
+}
+</script>
+<script>
+var INITIAL_DATA = null;
+var PIN_ENABLED = false;
+</script>
+<script>
+const $ = id => document.getElementById(id);
+const form = $('bookingForm');
+const SECTION_LABEL = { Ground: 'Dogs · Ground floor', Upper: 'Dogs · 1st floor', Cat: 'Cats' };
+const SECTION_SIZE = { Ground: 'Small', Upper: 'Medium', Cat: 'Cat' };
+const SIZE_LABEL = { Small: 'Small dog', Medium: 'Medium dog', Large: 'Large dog', Cat: 'Cat' };
+let data = { bookings: [], cages: [], rates: [], payments: [], blocks: [], settings: [], customers: [] };
+let view = 'cages', section = 'Ground', loaded = false, reportMode = 'week', pricesDirty = false;
+let editing = null, draftId = '', paymentEdit = null, paymentId = '', blockId = '', customerEdit = null, customerDraftId = '', cageEdit = null;
+
+const money = n => 'RM' + (Number(n) || 0).toFixed(2);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+const stamp = s => Date.parse(String(s).replace(' ', 'T').slice(0, 16) + '+08:00');
+const overlap = (a, b, c, d) => a < d && b > c;
+const isActive = b => b.Status === 'Booked' || b.Status === 'Checked in';
+const blockActive = b => b.Active !== false && String(b.Active).toUpperCase() !== 'FALSE';
+const cageSizes = c => String(c.Sizes || '').split(',').map(s => s.trim()).filter(Boolean);
+const settings = () => settingsMap_(data.settings);
+const hhmm = v => { const m = String(v || '').match(/(\d{1,2}):(\d{2})/); return m ? m[1].padStart(2, '0') + ':' + m[2] : ''; };
+const pretty = s => s ? new Date(stamp(s)).toLocaleString('en-MY', { timeZone: 'Asia/Kuala_Lumpur', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+const clock = s => new Date(stamp(s)).toLocaleTimeString('en-MY', { timeZone: 'Asia/Kuala_Lumpur', hour: 'numeric', minute: '2-digit' });
+const prettyDay = (d, opts) => new Date(d + 'T00:00Z').toLocaleDateString('en-MY', { timeZone: 'UTC', ...(opts || { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }) });
+const petText = b => esc(b.Pet) + (b.Size === 'Cat' && Number(b['Pets count']) > 1 ? ' (' + Number(b['Pets count']) + ' cats)' : ' · ' + esc(SIZE_LABEL[b.Size] || b.Size));
+const statusPill = s => `<span class="pill ${esc(s)}">${esc(s)}</span>`;
+const pct = r => Math.round(r * 100) + '%';
+
+// Every action sends the unlock token; the server refuses it without a valid PIN unlock.
+let token = '', locked = false, lastActivity = Date.now();
+function call(name, arg) {
+  return new Promise((resolve, reject) => {
+    const fail = err => {
+      const msg = String(err && err.message);
+      if (msg.includes('PIN_NOT_SET')) { window.PIN_ENABLED = false; lockApp(); reject(Error('No PIN yet.')); }
+      else if (msg.includes('PIN_REQUIRED')) { lockApp('Please enter the PIN again.'); reject(Error('Locked.')); }
+      else reject(err);
+    };
+    // GitHub Pages copy: talk to the Apps Script in the background, without cookies (so phone Google sign-ins don't matter).
+    if (window.API_URL) {
+      fetch(window.API_URL, { method: 'POST', credentials: 'omit', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ fn: name, token, arg }) })
+        .then(r => r.json())
+        .then(res => (res.ok ? resolve(res.result) : fail(Error(res.error))))
+        .catch(() => reject(Error('Cannot reach Google right now. Check the internet connection and try again.')));
+      return;
+    }
+    if (!window.google?.script?.run) return reject(Error('This preview is not connected. Open the deployed Google Apps Script app to save bookings.'));
+    const payload = name === 'unlock' ? arg : { token, arg };
+    google.script.run.withSuccessHandler(resolve).withFailureHandler(fail)[name](payload);
+  });
+}
+
+/* ---------- Lock screen ---------- */
+function lockApp(message) {
+  locked = true;
+  token = '';
+  data = { bookings: [], cages: [], rates: [], payments: [], blocks: [], settings: [], customers: [] };
+  loaded = false;
+  for (const d of document.querySelectorAll('dialog[open]')) d.close();
+  render();
+  // No PIN yet → "Create staff PIN" screen; otherwise the normal unlock screen.
+  const setup = !window.PIN_ENABLED;
+  $('lockText').textContent = setup ? 'Create a staff PIN (4–8 digits). Everyone will need it to open the app.' : 'Enter the staff PIN to continue';
+  $('pinInput2').hidden = !setup;
+  $('unlockBtn').textContent = setup ? 'Create PIN' : 'Unlock';
+  $('pinInput').value = ''; $('pinInput2').value = '';
+  $('pinError').textContent = message || '';
+  $('lock').hidden = false;
+  setTimeout(() => $('pinInput').focus(), 50);
+}
+$('lockForm').onsubmit = async e => {
+  e.preventDefault();
+  const button = $('unlockBtn'); button.disabled = true;
+  $('pinError').textContent = '';
+  try {
+    const setup = !window.PIN_ENABLED;
+    if (setup && $('pinInput').value !== $('pinInput2').value) throw Error('The two PINs do not match.');
+    const res = setup ? await call('setPin', { pin: $('pinInput').value }) : await call('unlock', $('pinInput').value);
+    if (setup) { window.PIN_ENABLED = true; renderPinStatus(); }
+    token = res.token;
+    locked = false;
+    lastActivity = Date.now();
+    $('lock').hidden = true;
+    $('pinInput').value = '';
+    $('notice').textContent = 'Loading bookings…';
+    await refresh();
+  } catch (err) {
+    $('pinError').textContent = err.message;
+    $('pinInput').value = '';
+    $('pinInput').focus();
+  } finally { button.disabled = false; }
+};
+// Lock automatically after 10 minutes without any taps or typing (like a phone screen).
+for (const ev of ['pointerdown', 'keydown']) document.addEventListener(ev, () => { lastActivity = Date.now(); }, true);
+setInterval(() => { if (window.PIN_ENABLED && !locked && Date.now() - lastActivity > 10 * 60000) lockApp('Locked after 10 minutes without use.'); }, 30000);
+async function refresh() {
+  try {
+    data = await call('getData');
+    if (!loaded) applyHours();
+    loaded = true;
+    $('notice').textContent = '';
+    render();
+    $('updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  } catch (e) {
+    $('notice').textContent = e.message + (loaded ? ' Showing the last data loaded.' : '');
+  }
+}
+function applyHours() {
+  const s = settings(), open = hhmm(s['Opening time']) || '09:30', close = hhmm(s['Closing time']) || '17:00';
+  $('from').value = open; $('to').value = close;
+}
+function hoursText() {
+  const s = settings(), fmt = t => new Date('2000-01-01T' + t + ':00Z').toLocaleTimeString('en-MY', { timeZone: 'UTC', hour: 'numeric', minute: '2-digit' });
+  return fmt(hhmm(s['Opening time']) || '09:30') + '–' + fmt(hhmm(s['Closing time']) || '17:00');
+}
+
+/* ---------- Rendering ---------- */
+function render() {
+  for (const p of document.querySelectorAll('[data-panel]')) p.hidden = p.dataset.panel !== view;
+  if (view === 'cages') { renderToday(); renderCages(); }
+  if (view === 'bookings') renderBookings();
+  if (view === 'customers') renderCustomers();
+  if (view === 'reports') renderReport();
+  if (view === 'manage') renderManage();
+}
+
+function renderToday() {
+  const t = today(), tn = dayNum_(t);
+  $('todayTitle').textContent = 'Today · ' + prettyDay(t);
+  const item = (b, late, action) => `<div class="item"><button class="link" data-booking="${esc(b.ID)}"><strong>${late ? '' : clock(late === false ? b['Check in'] : b['Check out']) + ' · '}${petText(b)}</strong><br><span class="muted">${esc(b.Cage)} · ${esc(b.Owner)} · ${esc(b.Phone)}</span></button><span>${late ? '<span class="pill late">' + late + '</span> ' : ''}${action}</span></div>`;
+  // Check-ins: arriving today, plus bookings that should have arrived already but are still "Booked".
+  const ins = data.bookings.filter(b => b.Status !== 'Cancelled' && b['Check in'].slice(0, 10) === t)
+    .sort((a, b) => a['Check in'].localeCompare(b['Check in']));
+  const lateIns = data.bookings.filter(b => b.Status === 'Booked' && dayNum_(b['Check in']) < tn && dayNum_(b['Check out']) >= tn);
+  $('inCount').textContent = ins.length;
+  $('inList').innerHTML = [
+    ...lateIns.map(b => item(b, 'Not arrived · ' + prettyDay(b['Check in'].slice(0, 10), { day: 'numeric', month: 'short' }), `<button class="small" data-act="Checked in" data-id="${esc(b.ID)}">Check in</button>`)),
+    ...ins.map(b => item(b, false, b.Status === 'Booked' ? `<button class="small" data-act="Checked in" data-id="${esc(b.ID)}">Check in</button>` : statusPill(b.Status))),
+  ].join('') || '<p class="muted">No check-ins today.</p>';
+  // Check-outs: leaving today, plus pets still checked in after their checkout date.
+  const outs = data.bookings.filter(b => b.Status !== 'Cancelled' && b['Check out'].slice(0, 10) === t)
+    .sort((a, b) => a['Check out'].localeCompare(b['Check out']));
+  const lateOuts = data.bookings.filter(b => b.Status === 'Checked in' && dayNum_(b['Check out']) < tn);
+  $('outCount').textContent = outs.length;
+  $('outList').innerHTML = [
+    ...lateOuts.map(b => item(b, 'Overdue · ' + prettyDay(b['Check out'].slice(0, 10), { day: 'numeric', month: 'short' }), `<button class="small" data-act="Checked out" data-id="${esc(b.ID)}">Check out</button>`)),
+    ...outs.map(b => item(b, null, b.Status === 'Checked in' ? `<button class="small" data-act="Checked out" data-id="${esc(b.ID)}">Check out</button>` : statusPill(b.Status))),
+  ].join('') || '<p class="muted">No check-outs today.</p>';
+  // Staying tonight: cages occupied by an active booking covering tonight.
+  let total = 0;
+  $('stayList').innerHTML = ['Ground', 'Upper', 'Cat'].map(s => {
+    const cages = data.cages.filter(c => c.Floor === s);
+    const used = cages.filter(c => data.bookings.some(b => b.Cage === c.Cage && isActive(b) && dayNum_(b['Check in']) <= tn && dayNum_(b['Check out']) > tn)).length;
+    total += used;
+    return `<div class="stayRow"><span>${SECTION_LABEL[s]}</span><strong>${used} / ${cages.length} cages</strong></div>`;
+  }).join('') + `<p class="muted">Balance due on today's check-outs: ${money(outs.filter(b => b.Status !== 'Cancelled').reduce((n, b) => n + Math.max(0, Number(b['Balance RM']) || 0), 0))}</p>`;
+  $('stayCount').textContent = total;
+}
+
+function bounds() {
+  const start = $('day').value + 'T' + $('from').value, end = ($('until').value || $('day').value) + 'T' + $('to').value;
+  return [stamp(start), stamp(end)];
+}
+function renderCages() {
+  const [start, end] = bounds();
+  const cages = data.cages.filter(c => c.Floor === section);
+  if (!(end > start)) { $('summary').textContent = 'Choose an end time after the start.'; $('grid').replaceChildren(); return; }
+  let available = 0;
+  const filter = $('filter').value;
+  const cards = cages.map(c => {
+    const bookings = data.bookings.filter(b => b.Cage === c.Cage && isActive(b) && overlap(start, end, stamp(b['Check in']), stamp(b['Check out'])))
+      .sort((a, b) => a['Check in'].localeCompare(b['Check in']));
+    const blocks = data.blocks.filter(b => b.Cage === c.Cage && blockActive(b) && overlap(start, end, stamp(b.Start), stamp(b.End)));
+    const status = blocks.length ? 'Out of service' : bookings.some(b => b.Status === 'Checked in') ? 'Checked in' : bookings.length ? 'Booked' : 'Available';
+    if (status === 'Available') available++;
+    const checkout = data.bookings.some(b => b.Cage === c.Cage && b.Status !== 'Cancelled' && b['Check out'].slice(0, 10) === $('day').value);
+    if (filter !== 'All cages' && (filter === 'Checkouts' ? !checkout : filter !== status)) return '';
+    const next = data.bookings.filter(b => b.Cage === c.Cage && isActive(b) && stamp(b['Check in']) >= end).sort((a, b) => a['Check in'].localeCompare(b['Check in']))[0];
+    return `<button class="cage ${blocks.length ? 'block' : bookings.length ? 'busy' : ''}" data-cage="${esc(c.Cage)}" data-booking="${esc(bookings[0]?.ID || '')}">
+      <h3>${esc(c.Cage)}</h3><span class="pill">${status}</span>
+      ${bookings.map(b => `<p><strong>${petText(b)}</strong><br>In ${pretty(b['Check in'])}<br>Out ${pretty(b['Check out'])}</p>`).join('')}
+      ${blocks.map(b => `<p>${esc(b.Reason)}<br>${pretty(b.Start)} – ${pretty(b.End)}</p>`).join('')}
+      ${status === 'Available' ? '<p>Free for selected period</p>' : ''}${next ? `<p>Next · ${pretty(next['Check in'])}</p>` : ''}</button>`;
+  });
+  $('summary').textContent = `${SECTION_LABEL[section]} · ${available} of ${cages.length} cages available`;
+  $('grid').innerHTML = cards.join('') || '<p class="muted">No cages match.</p>';
+}
+
+function matches(q, ...fields) {
+  q = q.trim().toLowerCase();
+  if (!q) return true;
+  const digits = q.replace(/\D/g, '');
+  return fields.some(f => String(f || '').toLowerCase().includes(q)) || (digits.length >= 3 && fields.some(f => phoneKey_(f).includes(phoneKey_(digits))));
+}
+function bookingRow(b) {
+  const extras = Number(b['Extras RM']) > 0 ? ' · extras ' + money(b['Extras RM']) : '';
+  return `<button class="record" data-booking="${esc(b.ID)}"><strong>${esc(b.Cage)} · ${petText(b)}</strong> — ${esc(b.Owner)} · ${esc(b.Phone)}<br>
+    ${pretty(b['Check in'])} – ${pretty(b['Check out'])}<br>${statusPill(b.Status)} &nbsp;Total ${money(b['Total RM'])}${extras} · Balance ${money(b['Balance RM'])}</button>`;
+}
+function renderBookings() {
+  const q = $('bookingSearch').value, sec = $('bookingSection').value, st = $('bookingStatus').value;
+  const list = data.bookings.filter(b => (!sec || sectionOf_(b, data.cages) === sec) && (!st || b.Status === st) && matches(q, b.Pet, b.Owner, b.Phone, b.Cage))
+    .sort((a, b) => b['Check in'].localeCompare(a['Check in']));
+  $('records').innerHTML = list.slice(0, 300).map(bookingRow).join('') || '<p class="muted">No bookings found.</p>';
+}
+
+function customerBookings(c) {
+  return data.bookings.filter(b => b['Customer ID'] === c.ID || (!b['Customer ID'] && phoneKey_(b.Phone) && phoneKey_(b.Phone) === phoneKey_(c.Phone)))
+    .sort((a, b) => b['Check in'].localeCompare(a['Check in']));
+}
+function renderCustomers() {
+  const q = $('customerSearch').value;
+  const list = data.customers.filter(c => matches(q, c.Name, c.Phone, c.Pets, c.Email)).sort((a, b) => String(a.Name).localeCompare(String(b.Name)));
+  $('customerCount').textContent = q.trim() ? `${list.length} of ${data.customers.length} customers match` : `${data.customers.length} customers`;
+  $('customerList').innerHTML = list.slice(0, 200).map(c => {
+    const stays = customerBookings(c), last = stays.find(b => b.Status !== 'Cancelled');
+    return `<button class="record" data-customer="${esc(c.ID)}"><strong>${esc(c.Name)}</strong> · ${esc(c.Phone)}${c.Email ? ' · ' + esc(c.Email) : ''}<br>
+      Pets: ${esc(c.Pets || '—')}<br><span class="muted">${stays.length} booking${stays.length === 1 ? '' : 's'}${last ? ' · last stay ' + pretty(last['Check in']) : ''}</span></button>`;
+  }).join('') || (q.trim() ? '<p>No customer found. They are new — create a booking and they will be saved automatically.</p>' : '<p class="muted">No customers yet.</p>');
+}
+
+function period() {
+  const d = dayNum_($('reportDay').value || today());
+  if (reportMode === 'week') {
+    const start = d - (new Date(d * 86400000).getUTCDay() + 6) % 7;
+    return [dayStr_(start), dayStr_(start + 6)];
+  }
+  const s = dayStr_(d), y = +s.slice(0, 4), m = +s.slice(5, 7);
+  return [s.slice(0, 8) + '01', new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10)];
+}
+function renderReport() {
+  if (!$('reportDay').value) $('reportDay').value = today();
+  const [from, to] = period(), r = report_(data, from, to);
+  const short = d => prettyDay(d, { day: 'numeric', month: 'short', year: 'numeric' });
+  const occ = s => `<div class="stayRow" style="display:block"><div style="display:flex;justify-content:space-between"><span>${SECTION_LABEL[s] || 'All cages'}</span><strong>${pct(r.occupancy[s].rate)}</strong></div>
+      <div class="bar"><span style="width:${Math.min(100, r.occupancy[s].rate * 100)}%"></span></div><span class="muted">${r.occupancy[s].used} of ${r.occupancy[s].capacity} cage-nights</span></div>`;
+  $('reportBody').innerHTML = `
+    <h2>${reportMode === 'week' ? 'Week' : 'Month'} · ${short(from)} – ${short(to)}</h2>
+    <div class="tiles">
+      <div class="card tile"><span class="muted">Income (value of stays)</span><div class="big">${money(r.income.total)}</div><span class="muted">Boarding ${money(r.income.boarding)} · Extras ${money(r.income.extras)}</span></div>
+      <div class="card tile"><span class="muted">Dogs</span><div class="big">${money(r.income.bySection.Ground + r.income.bySection.Upper)}</div><span class="muted">Ground ${money(r.income.bySection.Ground)} · 1st floor ${money(r.income.bySection.Upper)}</span></div>
+      <div class="card tile"><span class="muted">Cats</span><div class="big">${money(r.income.bySection.Cat)}</div></div>
+      <div class="card tile"><span class="muted">Occupancy (all cages)</span><div class="big">${pct(r.occupancy.all.rate)}</div><span class="muted">${r.bookings} booking${r.bookings === 1 ? '' : 's'} starting in this period</span></div>
+    </div>
+    <div class="twoCol">
+      <div class="card"><h3>Occupancy rate</h3>${occ('Ground')}${occ('Upper')}${occ('Cat')}${occ('all')}</div>
+      <div class="card cancelBox"><h3>Cancelled bookings (not counted as income)</h3>
+        <div class="stayRow"><span>Cancelled bookings</span><strong>${r.cancelled.count}</strong></div>
+        <div class="stayRow"><span>Value of cancelled stays</span><strong>${money(r.cancelled.value)}</strong></div>
+        <div class="stayRow"><span>Deposits / payments received on them</span><strong>${money(r.cancelled.received)}</strong></div>
+        <p class="muted">Kept separate so your income figure stays accurate. Decide case by case whether to refund or keep these.</p></div>
+    </div>
+    <p class="muted">Income counts every booking that is not cancelled (paid or not), spread over the nights that fall in this period. Payments recorded do not change these figures.</p>
+    <div class="tableWrap"><table><thead><tr><th>Date</th><th>Check-ins</th><th>Check-outs</th><th>Dogs ground</th><th>Dogs 1st</th><th>Cats</th><th>Income</th></tr></thead><tbody>
+      ${r.days.map(d => `<tr><td>${prettyDay(d.date, { weekday: 'short', day: 'numeric', month: 'short' })}</td><td>${d.checkIns}</td><td>${d.checkOuts}</td>
+        <td>${d.occupied.Ground}/${r.cageCount.Ground}</td><td>${d.occupied.Upper}/${r.cageCount.Upper}</td><td>${d.occupied.Cat}/${r.cageCount.Cat}</td><td>${money(d.income)}</td></tr>`).join('')}
+      <tr><th>Total</th><th>${r.days.reduce((n, d) => n + d.checkIns, 0)}</th><th>${r.days.reduce((n, d) => n + d.checkOuts, 0)}</th><th>${pct(r.occupancy.Ground.rate)}</th><th>${pct(r.occupancy.Upper.rate)}</th><th>${pct(r.occupancy.Cat.rate)}</th><th>${money(r.income.total)}</th></tr>
+    </tbody></table></div>`;
+}
+
+function fillPrices() {
+  const s = settings();
+  for (const input of $('pricesForm').querySelectorAll('[data-rate]')) input.value = data.rates.find(r => r.Size === input.dataset.rate)?.['Rate RM per night'] ?? '';
+  for (const input of $('pricesForm').querySelectorAll('[data-setting]')) {
+    const v = s[input.dataset.setting];
+    input.value = input.type === 'time' ? hhmm(v) : (v ?? '');
+  }
+  pricesDirty = false;
+  $('pricesError').textContent = '';
+  depositRule();
+}
+// Plain-language summary of the deposit rule, updated as staff type.
+function depositRule() {
+  const v = k => $('pricesForm').querySelector(`[data-setting="${k}"]`).value;
+  $('depositRule').textContent = `Rule: total RM${v('Low deposit up to RM')} or less → RM${v('Low deposit RM')} deposit · up to RM${v('Higher deposit threshold RM')} → RM${v('Standard deposit RM')} · above RM${v('Higher deposit threshold RM')} → RM${v('Higher deposit RM')}. The deposit is never more than the total.`;
+}
+function renderManage() {
+  if (!pricesDirty) fillPrices();
+  $('cageAdmin').innerHTML = ['Ground', 'Upper', 'Cat'].map(s => {
+    const cages = data.cages.filter(c => c.Floor === s);
+    return `<h3 style="margin-top:14px">${SECTION_LABEL[s]} <span class="muted">(${cages.length})</span></h3>
+      ${cages.map(c => `<div class="cageRow"><span><strong>${esc(c.Cage)}</strong> <span class="muted">${cageSizes(c).map(z => SIZE_LABEL[z] || z).join(', ')}</span></span>
+        <button class="small" data-edit-cage="${esc(c.Cage)}">Edit</button></div>`).join('')}
+      <button class="small" data-add-cage="${s}" style="margin-top:6px">+ Add cage</button>`;
+  }).join('');
+}
+
+/* ---------- Booking editor ---------- */
+function cageOptions() {
+  const size = form.elements.Size.value, selected = form.elements.Cage.value;
+  const cages = data.cages.filter(c => cageSizes(c).includes(size));
+  form.elements.Cage.innerHTML = ['Ground', 'Upper', 'Cat'].map(s => {
+    const list = cages.filter(c => c.Floor === s);
+    return list.length ? `<optgroup label="${SECTION_LABEL[s]}">${list.map(c => `<option>${esc(c.Cage)}</option>`).join('')}</optgroup>` : '';
+  }).join('');
+  if ([...form.elements.Cage.options].some(o => o.value === selected)) form.elements.Cage.value = selected;
+}
+function sizeForCage(name) {
+  const c = data.cages.find(x => x.Cage === name), sizes = c ? cageSizes(c) : [];
+  return sizes.includes(SECTION_SIZE[section]) ? SECTION_SIZE[section] : sizes[0] || SECTION_SIZE[section];
+}
+function openBooking(id, cage, customer) {
+  if (!loaded) { $('notice').textContent = 'Connect to the Google Sheet before creating a booking.'; return; }
+  editing = data.bookings.find(b => b.ID === id) || null;
+  draftId = editing?.ID || uuid();
+  form.reset();
+  form.elements.Size.value = editing?.Size || (cage ? sizeForCage(cage) : SECTION_SIZE[section]);
+  cageOptions();
+  if (editing) {
+    if (![...form.elements.Cage.options].some(o => o.value === editing.Cage)) form.elements.Cage.insertAdjacentHTML('beforeend', `<option>${esc(editing.Cage)}</option>`);
+    for (const e of form.elements) if (e.name && editing[e.name] !== undefined && editing[e.name] !== '') e.value = editing[e.name];
+  } else {
+    form.elements['Check in'].value = $('day').value + 'T' + $('from').value;
+    const next = dayStr_(dayNum_($('day').value) + 1);
+    form.elements['Check out'].value = ($('until').value && $('until').value > $('day').value ? $('until').value : next) + 'T' + $('to').value;
+    if (cage) form.elements.Cage.value = cage;
+  }
+  for (const k of ['Additional care RM per night', 'Grooming RM', 'Others RM']) if (form.elements[k].value === '') form.elements[k].value = 0;
+  if (!form.elements['Pets count'].value) form.elements['Pets count'].value = 1;
+  form.elements['Customer ID'].value = editing?.['Customer ID'] || '';
+  $('custSearch').value = '';
+  $('custResults').innerHTML = '';
+  if (customer) linkCustomer(customer, true); else showLinked();
+  $('hours').textContent = hoursText();
+  $('editorTitle').textContent = editing ? 'Edit booking' : 'New booking';
+  $('formError').textContent = '';
+  renderPayments();
+  calculate();
+  $('editor').showModal();
+}
+function showLinked() {
+  const c = data.customers.find(x => x.ID === form.elements['Customer ID'].value);
+  $('custLinked').innerHTML = c ? `<div class="linked"><span>Existing customer: <strong>${esc(c.Name)}</strong> · ${esc(c.Phone)}${c.Pets ? ' · pets: ' + esc(c.Pets) : ''}</span><button type="button" class="small" id="unlink">Not this customer</button></div>` : '';
+  $('petList').innerHTML = c ? String(c.Pets || '').split(',').map(p => p.trim()).filter(Boolean).map(p => `<option value="${esc(p)}">`).join('') : '';
+  phoneHint();
+}
+function linkCustomer(c, fillPet) {
+  form.elements['Customer ID'].value = c.ID;
+  form.elements.Owner.value = c.Name;
+  form.elements.Phone.value = c.Phone;
+  form.elements.Email.value = c.Email || '';
+  const pets = String(c.Pets || '').split(',').map(p => p.trim()).filter(Boolean);
+  if (fillPet && !form.elements.Pet.value && pets.length === 1) form.elements.Pet.value = pets[0];
+  $('custSearch').value = '';
+  $('custResults').innerHTML = '';
+  showLinked();
+  calculate();
+}
+function phoneHint() {
+  const key = phoneKey_(form.elements.Phone.value), linked = form.elements['Customer ID'].value;
+  const match = !linked && key.length >= 7 ? data.customers.find(c => phoneKey_(c.Phone) === key) : null;
+  $('phoneHint').innerHTML = match ? `This number belongs to <strong>${esc(match.Name)}</strong>. <button type="button" class="small" data-link="${esc(match.ID)}">Use their details</button>` : '';
+}
+function currentRate(b) {
+  const s = settings(), keep = editing && editing.Size === b.Size;
+  const rate = keep ? Number(editing['Rate RM']) : Number(data.rates.find(r => r.Size === b.Size)?.['Rate RM per night'] ?? NaN);
+  const old = editing?.['Extra pet RM per night'];
+  const extraPet = b.Size !== 'Cat' ? 0 : keep && old !== '' && old !== undefined && old !== null ? Number(old) : Number(s['Extra cat RM per night'] || 0);
+  return [rate, extraPet, s];
+}
+// Customer-facing text (WhatsApp: *text* shows in bold). Extra charges appear only when staff entered them.
+// Staff remarks are internal and are never included.
+function breakdownText(b, p, paid) {
+  const n = `${p.nights} night${p.nights === 1 ? '' : 's'}`;
+  const when = s => prettyDay(String(s).slice(0, 10), { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  const cat = b.Size === 'Cat';
+  const lines = ['*BOARDING PAYMENT BREAKDOWN*',
+    `📅 Check-in: ${when(b['Check in'])}`,
+    `📅 Checkout: ${when(b['Check out'])}`, '',
+    '*Charges*',
+    `Boarding: ${n} × ${money(p.nightly)}${p.pets > 1 ? ` (${p.pets} cats)` : ''} = ${money(p.boarding)}`];
+  if (p.care > 0) lines.push(`Additional care: ${n} × ${money(p.care)} = ${money(p.careTotal)}`);
+  if (p.grooming > 0) lines.push(`Basic grooming: ${money(p.grooming)}`);
+  if (p.others > 0) lines.push(`Others: ${money(p.others)}`);
+  lines.push(`*Total: ${money(p.total)}*`, '', '*Payment*');
+  if (paid > 0) lines.push(`Amount received: ${money(paid)}`, `Balance payable at checkout: ${money(p.total - paid)}`);
+  else lines.push(`Deposit to confirm booking: ${money(p.deposit)}`, `Balance payable at checkout: ${money(p.total - p.deposit)}`);
+  lines.push('', `Thank you! ${cat ? '🐱' : '🐶'}`);
+  return lines.join('\n');
+}
+function calculate() {
+  const b = Object.fromEntries(new FormData(form));
+  $('petsWrap').hidden = b.Size !== 'Cat';
+  const [rate, extraPet, s] = currentRate(b);
+  const p = b['Check in'] && b['Check out'] ? price_(b, rate, extraPet, s) : null;
+  const wa = $('whatsapp');
+  if (!p || !Number.isFinite(p.nights) || p.nights < 1 || !Number.isFinite(rate)) {
+    $('breakdown').value = 'Choose valid stay dates and a pet type.';
+    wa.classList.add('off'); wa.href = '#';
+    return;
+  }
+  const paid = editing ? data.payments.filter(x => x['Booking ID'] === editing.ID).reduce((n, x) => n + (Number(x['Amount RM']) || 0), 0) : 0;
+  const text = breakdownText(b, p, round2_(paid));
+  $('breakdown').value = text;
+  const num = waNumber_(b.Phone);
+  // Built without a literal double slash: Apps Script strips anything after "//" as a comment.
+  wa.href = num ? ['https:', '', 'wa.me', num].join('/') + '?text=' + encodeURIComponent(text) : '#';
+  wa.classList.toggle('off', !num);
+}
+function renderPayments() {
+  $('paymentsBox').hidden = !editing;
+  if (!editing) return;
+  const list = data.payments.filter(p => p['Booking ID'] === editing.ID);
+  $('paymentList').innerHTML = list.map(p => `<div class="item"><span><strong>${money(p['Amount RM'])}</strong> · ${esc(p.Method)}${p.Note ? ' · ' + esc(p.Note) : ''}<br><span class="muted">${pretty(p['Received at'])}</span></span>
+    <button type="button" class="small" data-pay="${esc(p.ID)}">Edit</button></div>`).join('') || '<p class="muted">No payments recorded.</p>';
+}
+
+/* ---------- Event wiring ---------- */
+form.addEventListener('input', e => { if (e.target.id !== 'custSearch') calculate(); if (e.target.name === 'Phone') phoneHint(); });
+form.elements.Size.onchange = () => { cageOptions(); calculate(); };
+form.onsubmit = async e => {
+  e.preventDefault();
+  $('save').disabled = true;
+  try {
+    const input = Object.fromEntries(new FormData(form));
+    input.ID = draftId;
+    input.Version = editing?.Version || 0;
+    data = await call('saveBooking', input);
+    $('editor').close();
+    render();
+    openView(input.ID);
+  } catch (err) { $('formError').textContent = err.message; } finally { $('save').disabled = false; }
+};
+$('custSearch').oninput = () => {
+  const q = $('custSearch').value;
+  $('custResults').innerHTML = q.trim().length < 2 ? '' : (data.customers.filter(c => matches(q, c.Name, c.Phone, c.Pets)).slice(0, 6)
+    .map(c => `<button type="button" class="small" data-link="${esc(c.ID)}"><strong>${esc(c.Name)}</strong>&nbsp;· ${esc(c.Phone)}${c.Pets ? ' · ' + esc(c.Pets) : ''}</button>`).join('')
+    || '<p class="muted">No existing customer found — fill in the details below and they will be saved as a new customer.</p>');
+};
+$('editor').addEventListener('click', e => {
+  const link = e.target.closest('[data-link]');
+  if (link) { const c = data.customers.find(x => x.ID === link.dataset.link); if (c) linkCustomer(c, true); }
+  if (e.target.id === 'unlink') { form.elements['Customer ID'].value = ''; showLinked(); }
+  const pay = e.target.closest('[data-pay]');
+  if (pay) openPayment(data.payments.find(p => p.ID === pay.dataset.pay));
+});
+$('copy').onclick = async () => {
+  try { await navigator.clipboard.writeText($('breakdown').value); $('formError').textContent = 'Payment breakdown copied.'; }
+  catch { $('breakdown').focus(); $('breakdown').select(); $('formError').textContent = 'Text selected. Choose Copy from your device menu.'; }
+};
+$('whatsapp').onclick = e => {
+  if ($('whatsapp').classList.contains('off')) { e.preventDefault(); $('formError').textContent = 'Enter the owner\'s phone number and valid stay dates first.'; }
+};
+
+function openPayment(p) {
+  paymentEdit = p || null;
+  paymentId = p?.ID || uuid();
+  $('payForm').reset();
+  if (p) { $('payForm').elements.amount.value = p['Amount RM']; $('payForm').elements.method.value = p.Method; $('payForm').elements.note.value = p.Note || ''; }
+  $('payTitle').textContent = p ? 'Edit payment' : 'Record payment received';
+  $('payDelete').hidden = !p;
+  $('payError').textContent = '';
+  $('payDialog').showModal();
+}
+function afterPayment() {
+  editing = data.bookings.find(b => b.ID === editing.ID) || editing;
+  renderPayments(); calculate(); render();
+}
+$('payment').onclick = () => openPayment(null);
+$('payForm').onsubmit = async e => {
+  e.preventDefault();
+  const button = e.submitter || e.target.querySelector("button.primary"); button.disabled = true;
+  try {
+    const f = Object.fromEntries(new FormData(e.target));
+    data = paymentEdit ? await call('updatePayment', { ID: paymentEdit.ID, ...f }) : await call('savePayment', { ...f, ID: paymentId, bookingId: editing.ID });
+    $('payDialog').close(); afterPayment();
+  } catch (err) { $('payError').textContent = err.message; } finally { button.disabled = false; }
+};
+$('payDelete').onclick = async () => {
+  if (!paymentEdit || !confirm(`Delete this payment of ${money(paymentEdit['Amount RM'])}?`)) return;
+  $('payDelete').disabled = true;
+  try { data = await call('deletePayment', paymentEdit.ID); $('payDialog').close(); afterPayment(); }
+  catch (err) { $('payError').textContent = err.message; } finally { $('payDelete').disabled = false; }
+};
+
+$('block').onclick = () => {
+  if (!loaded) return;
+  blockId = uuid();
+  $('blockForm').reset();
+  $('blockForm').elements.Cage.innerHTML = data.cages.filter(c => c.Floor === section).map(c => `<option>${esc(c.Cage)}</option>`).join('');
+  $('blockList').innerHTML = data.blocks.filter(b => blockActive(b) && data.cages.some(c => c.Cage === b.Cage && c.Floor === section))
+    .map(b => `<div class="item"><span>${esc(b.Cage)} · ${esc(b.Reason)}<br><span class="muted">${pretty(b.Start)} – ${pretty(b.End)}</span></span><button type="button" class="small" data-release="${esc(b.ID)}">Return to service</button></div>`).join('');
+  $('blockError').textContent = '';
+  $('blockDialog').showModal();
+};
+$('blockForm').onsubmit = async e => {
+  e.preventDefault();
+  const button = e.submitter || e.target.querySelector("button.primary"); button.disabled = true;
+  try { data = await call('saveBlock', { ...Object.fromEntries(new FormData(e.target)), ID: blockId }); $('blockDialog').close(); render(); }
+  catch (err) { $('blockError').textContent = err.message; } finally { button.disabled = false; }
+};
+$('blockList').onclick = async e => {
+  const id = e.target.dataset.release;
+  if (!id) return;
+  e.target.disabled = true;
+  try { data = await call('releaseBlock', id); $('blockDialog').close(); render(); }
+  catch (err) { $('blockError').textContent = err.message; e.target.disabled = false; }
+};
+
+function openCustomer(c) {
+  customerEdit = c || null;
+  customerDraftId = c?.ID || uuid();
+  const f = $('customerForm');
+  f.reset();
+  if (c) for (const k of ['Name', 'Phone', 'Email', 'Pets', 'Notes']) f.elements[k].value = c[k] || '';
+  $('customerTitle').textContent = c ? c.Name : 'New customer';
+  $('customerError').textContent = '';
+  const stays = c ? customerBookings(c) : [];
+  const counted = stays.filter(b => b.Status !== 'Cancelled');
+  const row = (label, value) => `<div class="row"><span>${label}</span><strong>${value}</strong></div>`;
+  $('customerSummary').innerHTML = c ? `
+    <div class="sumGrid">
+      <div class="sumBox"><h3>Contact</h3>
+        ${row('Phone', `<a href="tel:${esc(String(c.Phone).replace(/[^\d+]/g, ''))}">${esc(c.Phone)}</a>`)}
+        ${row('Email', esc(c.Email || '—'))}${row('Pets', esc(c.Pets || '—'))}</div>
+      <div class="sumBox"><h3>History</h3>
+        ${row('Stays', counted.length)}${row('Last stay', counted[0] ? pretty(counted[0]['Check in']) : '—')}
+        ${row('Total value of stays', money(counted.reduce((n, b) => n + (Number(b['Total RM']) || 0), 0)))}</div>
+      ${c.Notes ? `<div class="sumBox"><h3>Notes</h3><p class="note">${esc(c.Notes)}</p></div>` : ''}
+    </div>
+    <div class="actions"><button type="button" class="primary" id="customerEdit">Edit customer</button><button type="button" id="customerBook">New booking for this customer</button></div>` : '';
+  showCustomerForm(!c);
+  $('customerBookings').innerHTML = c ? (stays.map(bookingRow).join('') || '<p class="muted">No stays yet.</p>') : '<p class="muted">Save the customer first.</p>';
+  $('customerDialog').showModal();
+}
+function showCustomerForm(editMode) {
+  $('customerForm').hidden = !editMode;
+  $('customerSummary').hidden = editMode;
+}
+$('customerSummary').onclick = e => {
+  if (e.target.id === 'customerEdit') showCustomerForm(true);
+  if (e.target.id === 'customerBook') { const c = customerEdit; $('customerDialog').close(); openBooking(null, null, c); }
+};
+$('customerCancel').onclick = () => { if (customerEdit) { $('customerForm').reset(); openCustomer(customerEdit); } else $('customerDialog').close(); };
+$('customerForm').onsubmit = async e => {
+  e.preventDefault();
+  const button = e.submitter || e.target.querySelector("button.primary"); button.disabled = true;
+  try {
+    data = await call('saveCustomer', { ...Object.fromEntries(new FormData(e.target)), ID: customerDraftId });
+    $('customerDialog').close(); render();
+    const saved = data.customers.find(c => c.ID === customerDraftId);
+    if (saved) openCustomer(saved);
+  } catch (err) { $('customerError').textContent = err.message; } finally { button.disabled = false; }
+};
+$('customerBookings').onclick = e => { const row = e.target.closest('[data-booking]'); if (row) { $('customerDialog').close(); openView(row.dataset.booking); } };
+$('newCustomer').onclick = () => openCustomer(null);
+$('customerList').onclick = e => { const row = e.target.closest('[data-customer]'); if (row) openCustomer(data.customers.find(c => c.ID === row.dataset.customer)); };
+
+function openCage(c, sec) {
+  cageEdit = c || null;
+  const f = $('cageForm');
+  f.reset();
+  const floor = c?.Floor || sec;
+  f.elements.Cage.value = c?.Cage || '';
+  f.elements.Floor.value = floor;
+  const sizes = c ? cageSizes(c) : floor === 'Cat' ? ['Cat'] : floor === 'Ground' ? ['Small'] : ['Medium', 'Large'];
+  for (const box of f.querySelectorAll('[name="Sizes"]')) box.checked = sizes.includes(box.value);
+  $('cageTitle').textContent = c ? 'Edit cage ' + c.Cage : 'Add cage';
+  $('cageDelete').hidden = !c;
+  $('cageNote').textContent = c ? 'Renaming a cage also updates all of its bookings.' : '';
+  $('cageError').textContent = '';
+  $('cageDialog').showModal();
+}
+$('cageForm').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, button = e.submitter || e.target.querySelector("button.primary"); button.disabled = true;
+  try {
+    data = await call('saveCage', { oldName: cageEdit?.Cage || '', Cage: f.elements.Cage.value, Floor: f.elements.Floor.value,
+      Sizes: [...f.querySelectorAll('[name="Sizes"]:checked')].map(x => x.value) });
+    $('cageDialog').close(); render();
+  } catch (err) { $('cageError').textContent = err.message; } finally { button.disabled = false; }
+};
+$('cageDelete').onclick = async () => {
+  if (!cageEdit || !confirm(`Delete cage ${cageEdit.Cage}? Past bookings keep their records.`)) return;
+  $('cageDelete').disabled = true;
+  try { data = await call('deleteCage', cageEdit.Cage); $('cageDialog').close(); render(); }
+  catch (err) { $('cageError').textContent = err.message; } finally { $('cageDelete').disabled = false; }
+};
+$('cageAdmin').onclick = e => {
+  const edit = e.target.closest('[data-edit-cage]'), add = e.target.closest('[data-add-cage]');
+  if (edit) openCage(data.cages.find(c => c.Cage === edit.dataset.editCage));
+  if (add) openCage(null, add.dataset.addCage);
+};
+
+$('pricesForm').oninput = () => { pricesDirty = true; depositRule(); };
+$('resetPrices').onclick = fillPrices;
+$('pricesForm').onsubmit = async e => {
+  e.preventDefault();
+  const button = $('savePrices'); button.disabled = true;
+  const rates = {}, values = {};
+  for (const input of e.target.querySelectorAll('[data-rate]')) rates[input.dataset.rate] = input.value;
+  for (const input of e.target.querySelectorAll('[data-setting]')) values[input.dataset.setting] = input.value;
+  try {
+    data = await call('saveRates', { rates, settings: values });
+    pricesDirty = false; render();
+    $('pricesError').textContent = 'Prices saved.';
+  } catch (err) { $('pricesError').textContent = err.message; } finally { button.disabled = false; }
+};
+
+async function quickStatus(id, status, errorEl) {
+  const b = data.bookings.find(x => x.ID === id);
+  if (!b || !confirm(`${status === 'Checked in' ? 'Check in' : 'Check out'} ${b.Pet} (${b.Cage})?`)) return false;
+  try { data = await call('saveBooking', { ...b, Status: status }); render(); return true; }
+  catch (err) { (errorEl || $('notice')).textContent = err.message; return false; }
+}
+
+/* ---------- Booking summary ---------- */
+function bookingPrice(b) {
+  const s = settings();
+  const extraPet = b.Size === 'Cat' ? Number(b['Extra pet RM per night'] !== '' && b['Extra pet RM per night'] != null ? b['Extra pet RM per night'] : s['Extra cat RM per night'] || 0) : 0;
+  return price_(b, Number(b['Rate RM']), extraPet, s);
+}
+let viewing = null;
+function openView(id) {
+  const b = data.bookings.find(x => x.ID === id);
+  if (!b) return;
+  viewing = b;
+  const p = bookingPrice(b), paid = Number(b['Paid RM']) || 0;
+  const row = (label, value, cls) => `<div class="row ${cls || ''}"><span>${label}</span><strong>${value}</strong></div>`;
+  const n = `${p.nights} night${p.nights === 1 ? '' : 's'}`;
+  const customer = data.customers.find(c => c.ID === b['Customer ID']);
+  const payments = data.payments.filter(x => x['Booking ID'] === b.ID);
+  const type = b.Size === 'Cat' ? (p.pets > 1 ? p.pets + ' cats' : 'Cat') : SIZE_LABEL[b.Size] || b.Size;
+  $('viewBody').innerHTML = `
+    <div class="sumHead"><h2>${esc(b.Pet)}</h2>${statusPill(b.Status)}</div>
+    <p class="sumSub">${esc(type)} · Cage ${esc(b.Cage)} · ${esc(SECTION_LABEL[sectionOf_(b, data.cages)] || '')}</p>
+    <div class="sumGrid">
+      <div class="sumBox"><h3>Stay</h3>
+        ${row('Check-in', pretty(b['Check in']))}${row('Checkout', pretty(b['Check out']))}${row('Length', n)}</div>
+      <div class="sumBox"><h3>Owner</h3>
+        <p class="big">${esc(b.Owner)}</p>
+        ${row('Phone', `<a href="tel:${esc(String(b.Phone).replace(/[^\d+]/g, ''))}">${esc(b.Phone)}</a>`)}
+        ${b.Email ? row('Email', esc(b.Email)) : ''}
+        ${customer ? `<button type="button" class="small" data-view-customer="${esc(customer.ID)}" style="margin-top:6px">Customer details</button>` : ''}</div>
+      <div class="sumBox"><h3>Charges</h3>
+        ${row(`Boarding (${n} × ${money(p.nightly)})`, money(p.boarding))}
+        ${p.care > 0 ? row(`Additional care (${n} × ${money(p.care)})`, money(p.careTotal)) : ''}
+        ${p.grooming > 0 ? row('Basic grooming', money(p.grooming)) : ''}
+        ${p.others > 0 ? row('Others', money(p.others)) : ''}
+        ${row('Total', money(p.total), 'total')}</div>
+      <div class="sumBox"><h3>Payment</h3>
+        ${row('Deposit required', money(p.deposit))}
+        ${row('Received', money(paid))}
+        ${row('Balance due', money(p.total - paid), p.total - paid > 0 ? 'due' : '')}
+        ${payments.length ? '<div style="margin-top:6px">' + payments.map(x => `<div class="row"><span>${pretty(x['Received at'])} · ${esc(x.Method)}</span><strong>${money(x['Amount RM'])}</strong></div>`).join('') + '</div>' : ''}</div>
+      ${String(b['Care notes'] || '').trim() ? `<div class="sumBox"><h3>Care notes</h3><p class="note">${esc(b['Care notes'])}</p></div>` : ''}
+      ${String(b['Extra remarks'] || '').trim() ? `<div class="sumBox"><h3>Extra charge remarks</h3><p class="note">${esc(b['Extra remarks'])}</p></div>` : ''}
+    </div>`;
+  // Contact owner: opens a WhatsApp chat with the owner, no message pre-filled.
+  const num = waNumber_(b.Phone), chat = num ? ['https:', '', 'wa.me', num].join('/') : '';
+  $('viewActions').innerHTML = `
+    <button type="button" class="primary" id="viewEdit">Edit booking</button>
+    ${b.Status === 'Booked' ? `<button type="button" data-view-act="Checked in">Check in</button>` : ''}
+    ${b.Status === 'Checked in' ? `<button type="button" data-view-act="Checked out">Check out</button>` : ''}
+    ${chat ? `<a class="button wa" target="_blank" rel="noopener" href="${esc(chat)}">Contact owner</a>` : ''}`;
+  $('viewError').textContent = '';
+  if (!$('viewer').open) $('viewer').showModal();
+}
+$('viewer').addEventListener('click', async e => {
+  if (!viewing) return;
+  if (e.target.id === 'viewEdit') { const id = viewing.ID; $('viewer').close(); openBooking(id); }
+  const act = e.target.closest('[data-view-act]');
+  if (act && await quickStatus(viewing.ID, act.dataset.viewAct, $('viewError'))) openView(viewing.ID);
+  const cust = e.target.closest('[data-view-customer]');
+  if (cust) { $('viewer').close(); openCustomer(data.customers.find(c => c.ID === cust.dataset.viewCustomer)); }
+});
+
+document.querySelector('[data-panel="cages"] .today').onclick = e => {
+  const act = e.target.closest('[data-act]');
+  if (act) return quickStatus(act.dataset.id, act.dataset.act);
+  const row = e.target.closest('[data-booking]');
+  if (row) openView(row.dataset.booking);
+};
+for (const el of document.querySelectorAll('[data-close]')) el.onclick = () => $(el.dataset.close).close();
+$('views').onclick = e => {
+  const b = e.target.closest('[data-view]');
+  if (!b) return;
+  view = b.dataset.view;
+  for (const x of $('views').children) x.classList.toggle('selected', x === b);
+  if (view === 'manage') pricesDirty = false;
+  render();
+};
+$('sections').onclick = e => {
+  const b = e.target.closest('[data-section]');
+  if (!b) return;
+  section = b.dataset.section;
+  for (const x of $('sections').children) x.classList.toggle('selected', x === b);
+  render();
+};
+$('reportModes').onclick = e => {
+  const b = e.target.closest('[data-mode]');
+  if (!b) return;
+  reportMode = b.dataset.mode;
+  for (const x of $('reportModes').children) x.classList.toggle('selected', x === b);
+  render();
+};
+function shiftReport(dir) {
+  const [from] = period();
+  if (reportMode === 'week') $('reportDay').value = dayStr_(dayNum_(from) + 7 * dir);
+  else { const y = +from.slice(0, 4), m = +from.slice(5, 7) - 1 + dir; $('reportDay').value = new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 10); }
+  render();
+}
+$('reportPrev').onclick = () => shiftReport(-1);
+$('reportNext').onclick = () => shiftReport(1);
+for (const id of ['day', 'from', 'until', 'to', 'filter', 'bookingSection', 'bookingStatus', 'reportDay']) $(id).onchange = render;
+for (const id of ['bookingSearch', 'customerSearch']) $(id).oninput = render;
+// Booked cage → summary first; empty cage → straight to a new booking for that cage.
+$('grid').onclick = e => { const card = e.target.closest('[data-cage]'); if (!card) return; if (card.dataset.booking) openView(card.dataset.booking); else openBooking(null, card.dataset.cage); };
+$('records').onclick = e => { const row = e.target.closest('[data-booking]'); if (row) openView(row.dataset.booking); };
+$('new').onclick = $('new2').onclick = () => openBooking();
+$('close').onclick = () => $('editor').close();
+$('refresh').onclick = refresh;
+$('day').value = today();
+// The app always starts on the PIN screen (or "Create staff PIN" if none exists yet).
+async function start() {
+  if (window.API_URL) {
+    $('lock').hidden = false;
+    $('lockText').textContent = 'Connecting…';
+    try { window.PIN_ENABLED = (await call('pinStatus')).enabled; }
+    catch (err) { $('lockText').textContent = err.message; return; }
+  }
+  renderPinStatus();
+  lockApp();
+}
+start();
+setInterval(() => { if (!locked && !document.querySelector('dialog[open]')) refresh(); }, 60000);
+$('lockNow').onclick = () => lockApp();
+
+function renderPinStatus() {
+  $('pinStatus').textContent = 'Staff need this PIN every time they open the app link.';
+  $('lockNow').hidden = !window.PIN_ENABLED;
+}
+$('pinForm').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target;
+  if (f.elements.pin.value !== f.elements.pin2.value) { $('pinSetError').textContent = 'The two PINs do not match.'; return; }
+  $('savePin').disabled = true;
+  try {
+    const res = await call('setPin', { pin: f.elements.pin.value });
+    token = res.token; window.PIN_ENABLED = res.enabled;
+    f.reset(); renderPinStatus();
+    $('pinSetError').textContent = 'PIN saved. Remember it — staff need it every time they open the app.';
+  } catch (err) { $('pinSetError').textContent = err.message; } finally { $('savePin').disabled = false; }
+};
+renderPinStatus();
+</script>
+</body>
+</html>
