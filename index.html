@@ -41,11 +41,14 @@ label{display:grid;gap:6px;font-size:14px;font-weight:600}
 #notice{padding:0 0 12px;color:#8b341b}
 #notice:empty{display:none}
 .pill{display:inline-block;background:#e5f4ed;color:#23654f;padding:3px 9px;border-radius:6px;font-size:13px;font-weight:600}
-.pill.Booked,.busy .pill{background:#fff1dc;color:#87501e}
-.pill.Checked.in{background:#dcebff;color:#204f86}
-.pill.Cancelled{background:#fbe4e2;color:#94302a}
+/* One colour per status: Available green, Booked orange, Checked in blue, Checked out grey, Cancelled red, Disabled dark grey */
+.pill.st-available{background:#e5f4ed;color:#1f6b4f}
+.pill.st-booked{background:#fff1dc;color:#8a4b12}
+.pill.st-checkedin{background:#dcebff;color:#1d4f8c}
+.pill.st-checkedout{background:#eceff2;color:#4a5761}
+.pill.st-cancelled{background:#fbe4e2;color:#94302a}
+.pill.st-disabled{background:#3d4a52;color:#fff}
 .pill.late{background:#fbe4e2;color:#94302a}
-.block .pill{background:#e8ecf0;color:#48545c}
 
 /* Today */
 .dayRow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px}
@@ -67,9 +70,14 @@ label{display:grid;gap:6px;font-size:14px;font-weight:600}
 
 /* Cages */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:14px}
-.cage{text-align:left;background:#fff;border:1px solid #d7e1e5;border-top:4px solid #269575;border-radius:12px;padding:18px;min-height:180px;display:block;width:100%}
-.cage.busy{border-top-color:#c17536}
-.cage.block{border-top-color:#78858f}
+.cage{position:relative;text-align:left;background:#fff;border:1px solid #d7e1e5;border-top:4px solid #269575;border-radius:12px;padding:18px;min-height:180px;display:block;width:100%;cursor:pointer;color:inherit}
+.cage.st-booked{border-top-color:#d98a2b}
+.cage.st-checkedin{border-top-color:#3b6fb0}
+.cage.st-disabled{border-top-color:#3d4a52;background:#f1f3f5}
+.cage.st-disabled h3,.cage.st-disabled p{color:#6b7780}
+.cage:focus-visible{outline:3px solid #176859;outline-offset:2px}
+.cageToggle{position:absolute;top:10px;right:10px;min-height:34px;padding:4px 10px;font-size:13px;font-weight:600;border-radius:8px;white-space:nowrap}
+.cageToggle.enable{background:#176859;color:#fff;border-color:#176859}
 .cage h3{font-size:25px;margin:0 0 10px}
 .cage p{font-size:14px;line-height:1.6;margin:8px 0;font-weight:400}
 #summary{margin:6px 0 14px}
@@ -211,9 +219,8 @@ legend{font-weight:700;padding:0 6px}
       <label>Until time<input id="to" type="time" value="17:00"></label>
     </div>
     <div class="toolbar">
-      <label>Show<select id="filter"><option>All cages</option><option>Available</option><option>Booked</option><option>Checked in</option><option>Checkouts</option><option>Out of service</option></select></label>
+      <label>Show<select id="filter"><option>All cages</option><option>Available</option><option>Booked</option><option>Checked in</option><option>Checkouts</option><option>Disabled</option></select></label>
       <button id="new" class="primary">New booking</button>
-      <button id="block">Out of service</button>
     </div>
     <h2 id="summary"></h2>
     <div id="grid" class="grid"></div>
@@ -315,7 +322,7 @@ legend{font-weight:700;padding:0 6px}
       <label>Pet type<select name="Size"><option value="Small">Small dog</option><option value="Medium">Medium dog</option><option value="Large">Large dog</option><option value="Cat">Cat</option></select></label>
       <label id="petsWrap">Number of cats in this cage<input name="Pets count" type="number" min="1" max="10" step="1" value="1"></label>
       <label>Owner name<input name="Owner" required maxlength="150"></label>
-      <label>Phone<input name="Phone" type="tel" required maxlength="50"><span id="phoneHint" class="muted"></span></label>
+      <label>Phone (numbers only, 10–11 digits)<input name="Phone" type="tel" inputmode="numeric" pattern="[0-9]{10,11}" minlength="10" maxlength="11" required title="10 or 11 digits, numbers only" placeholder="e.g. 0123456789"><span id="phoneHint" class="muted"></span></label>
       <label>Email (optional)<input name="Email" type="email"></label>
       <label>Cage<select name="Cage"></select></label>
       <label>Check-in date and time<input name="Check in" type="datetime-local" required></label>
@@ -326,9 +333,9 @@ legend{font-weight:700;padding:0 6px}
       <fieldset class="full">
         <legend>Extra charges</legend>
         <div class="formgrid">
-          <label>Additional care (RM per night)<input name="Additional care RM per night" type="number" min="0" step="0.01" value="0"></label>
-          <label>Basic grooming (RM)<input name="Grooming RM" type="number" min="0" step="0.01" value="0"></label>
-          <label>Others (RM)<input name="Others RM" type="number" min="0" step="0.01" value="0"></label>
+          <label>Additional care (RM per night) · RM0–30<input name="Additional care RM per night" type="number" min="0" max="30" step="0.01" value="0" required></label>
+          <label>Basic grooming (RM) · RM0–30<input name="Grooming RM" type="number" min="0" max="30" step="0.01" value="0" required></label>
+          <label>Others (RM) · RM0–30<input name="Others RM" type="number" min="0" max="30" step="0.01" value="0" required></label>
           <label class="full">Remarks for extra charges<textarea name="Extra remarks" placeholder="e.g. medication twice a day, nail trim"></textarea></label>
         </div>
       </fieldset>
@@ -370,22 +377,6 @@ legend{font-weight:700;padding:0 6px}
   </form>
 </dialog>
 
-<!-- Out of service -->
-<dialog id="blockDialog">
-  <h2>Out of service</h2>
-  <form id="blockForm">
-    <div class="formgrid">
-      <label>Cage<select name="Cage"></select></label>
-      <label>Reason<input name="Reason" required></label>
-      <label>From<input type="datetime-local" name="Start" required></label>
-      <label>Until<input type="datetime-local" name="End" required></label>
-    </div>
-    <p id="blockError" class="error"></p>
-    <div class="actions"><button class="primary">Save service block</button><button type="button" data-close="blockDialog">Close</button></div>
-  </form>
-  <div id="blockList"></div>
-</dialog>
-
 <!-- Customer -->
 <dialog id="customerDialog">
   <button class="close" data-close="customerDialog">Close</button>
@@ -394,7 +385,7 @@ legend{font-weight:700;padding:0 6px}
   <form id="customerForm">
     <div class="formgrid">
       <label>Name<input name="Name" required maxlength="150"></label>
-      <label>Phone<input name="Phone" type="tel" required maxlength="50"></label>
+      <label>Phone (numbers only, 10–11 digits)<input name="Phone" type="tel" inputmode="numeric" pattern="[0-9]{10,11}" minlength="10" maxlength="11" required title="10 or 11 digits, numbers only" placeholder="e.g. 0123456789"></label>
       <label>Email<input name="Email" type="email"></label>
       <label>Pets<input name="Pets" placeholder="e.g. Max, Luna"></label>
       <label class="full">Notes<textarea name="Notes"></textarea></label>
@@ -549,7 +540,9 @@ const pretty = s => s ? new Date(stamp(s)).toLocaleString('en-MY', { timeZone: '
 const clock = s => new Date(stamp(s)).toLocaleTimeString('en-MY', { timeZone: 'Asia/Kuala_Lumpur', hour: 'numeric', minute: '2-digit' });
 const prettyDay = (d, opts) => new Date(d + 'T00:00Z').toLocaleDateString('en-MY', { timeZone: 'UTC', ...(opts || { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }) });
 const petText = b => esc(b.Pet) + (b.Size === 'Cat' && Number(b['Pets count']) > 1 ? ' (' + Number(b['Pets count']) + ' cats)' : ' · ' + esc(SIZE_LABEL[b.Size] || b.Size));
-const statusPill = s => `<span class="pill ${esc(s)}">${esc(s)}</span>`;
+const pillClass = s => 'st-' + String(s).toLowerCase().replace(/[^a-z]/g, '');
+const statusPill = s => `<span class="pill ${pillClass(s)}">${esc(s)}</span>`;
+const isDisabled = c => c.Disabled === true || String(c.Disabled).toUpperCase() === 'TRUE';
 const pct = r => Math.round(r * 100) + '%';
 
 // Every action sends the unlock token; the server refuses it without a valid PIN unlock.
@@ -700,24 +693,29 @@ function renderCages() {
   const [start, end] = bounds();
   const cages = data.cages.filter(c => c.Floor === section);
   if (!(end > start)) { $('summary').textContent = 'Choose an end time after the start.'; $('grid').replaceChildren(); return; }
-  let available = 0;
+  let available = 0, disabledCount = 0;
   const filter = $('filter').value;
   const cards = cages.map(c => {
     const bookings = data.bookings.filter(b => b.Cage === c.Cage && isActive(b) && overlap(start, end, stamp(b['Check in']), stamp(b['Check out'])))
       .sort((a, b) => a['Check in'].localeCompare(b['Check in']));
-    const blocks = data.blocks.filter(b => b.Cage === c.Cage && blockActive(b) && overlap(start, end, stamp(b.Start), stamp(b.End)));
-    const status = blocks.length ? 'Out of service' : bookings.some(b => b.Status === 'Checked in') ? 'Checked in' : bookings.length ? 'Booked' : 'Available';
+    const off = isDisabled(c);
+    const status = off ? 'Disabled' : bookings.some(b => b.Status === 'Checked in') ? 'Checked in' : bookings.length ? 'Booked' : 'Available';
     if (status === 'Available') available++;
+    if (off) disabledCount++;
     const checkout = data.bookings.some(b => b.Cage === c.Cage && b.Status !== 'Cancelled' && b['Check out'].slice(0, 10) === $('day').value);
     if (filter !== 'All cages' && (filter === 'Checkouts' ? !checkout : filter !== status)) return '';
     const next = data.bookings.filter(b => b.Cage === c.Cage && isActive(b) && stamp(b['Check in']) >= end).sort((a, b) => a['Check in'].localeCompare(b['Check in']))[0];
-    return `<button class="cage ${blocks.length ? 'block' : bookings.length ? 'busy' : ''}" data-cage="${esc(c.Cage)}" data-booking="${esc(bookings[0]?.ID || '')}">
-      <h3>${esc(c.Cage)}</h3><span class="pill">${status}</span>
+    // Each card has its own Disable / Enable button in the corner.
+    const toggle = off
+      ? `<button type="button" class="cageToggle enable" data-toggle="${esc(c.Cage)}" data-disable="" aria-label="Enable cage ${esc(c.Cage)}">✅ Enable</button>`
+      : `<button type="button" class="cageToggle" data-toggle="${esc(c.Cage)}" data-disable="1" aria-label="Disable cage ${esc(c.Cage)}" title="Disable this cage">⛔</button>`;
+    return `<div class="cage ${pillClass(status)}" role="button" tabindex="0" data-cage="${esc(c.Cage)}" data-booking="${esc(bookings[0]?.ID || '')}">
+      ${toggle}<h3>${esc(c.Cage)}</h3>${statusPill(status)}
       ${bookings.map(b => `<p><strong>${petText(b)}</strong><br>In ${pretty(b['Check in'])}<br>Out ${pretty(b['Check out'])}</p>`).join('')}
-      ${blocks.map(b => `<p>${esc(b.Reason)}<br>${pretty(b.Start)} – ${pretty(b.End)}</p>`).join('')}
-      ${status === 'Available' ? '<p>Free for selected period</p>' : ''}${next ? `<p>Next · ${pretty(next['Check in'])}</p>` : ''}</button>`;
+      ${off ? '<p>Not available for booking until enabled.</p>' : ''}
+      ${status === 'Available' ? '<p>Free for selected period</p>' : ''}${!off && next ? `<p>Next · ${pretty(next['Check in'])}</p>` : ''}</div>`;
   });
-  $('summary').textContent = `${SECTION_LABEL[section]} · ${available} of ${cages.length} cages available`;
+  $('summary').textContent = `${SECTION_LABEL[section]} · ${available} of ${cages.length} cages available` + (disabledCount ? ` · ${disabledCount} disabled` : '');
   $('grid').innerHTML = cards.join('') || '<p class="muted">No cages match.</p>';
 }
 
@@ -814,7 +812,7 @@ function renderManage() {
   $('cageAdmin').innerHTML = ['Ground', 'Upper', 'Cat'].map(s => {
     const cages = data.cages.filter(c => c.Floor === s);
     return `<h3 style="margin-top:14px">${SECTION_LABEL[s]} <span class="muted">(${cages.length})</span></h3>
-      ${cages.map(c => `<div class="cageRow"><span><strong>${esc(c.Cage)}</strong> <span class="muted">${cageSizes(c).map(z => SIZE_LABEL[z] || z).join(', ')}</span></span>
+      ${cages.map(c => `<div class="cageRow"><span><strong>${esc(c.Cage)}</strong> <span class="muted">${cageSizes(c).map(z => SIZE_LABEL[z] || z).join(', ')}</span>${isDisabled(c) ? ' ' + statusPill('Disabled') : ''}</span>
         <button class="small" data-edit-cage="${esc(c.Cage)}">Edit</button></div>`).join('')}
       <button class="small" data-add-cage="${s}" style="margin-top:6px">+ Add cage</button>`;
   }).join('');
@@ -823,7 +821,7 @@ function renderManage() {
 /* ---------- Booking editor ---------- */
 function cageOptions() {
   const size = form.elements.Size.value, selected = form.elements.Cage.value;
-  const cages = data.cages.filter(c => cageSizes(c).includes(size));
+  const cages = data.cages.filter(c => cageSizes(c).includes(size) && (!isDisabled(c) || c.Cage === editing?.Cage));
   form.elements.Cage.innerHTML = ['Ground', 'Upper', 'Cat'].map(s => {
     const list = cages.filter(c => c.Floor === s);
     return list.length ? `<optgroup label="${SECTION_LABEL[s]}">${list.map(c => `<option>${esc(c.Cage)}</option>`).join('')}</optgroup>` : '';
@@ -851,6 +849,7 @@ function openBooking(id, cage, customer) {
     if (cage) form.elements.Cage.value = cage;
   }
   for (const k of ['Additional care RM per night', 'Grooming RM', 'Others RM']) if (form.elements[k].value === '') form.elements[k].value = 0;
+  form.elements.Phone.value = form.elements.Phone.value.replace(/\D/g, '');
   if (!form.elements['Pets count'].value) form.elements['Pets count'].value = 1;
   form.elements['Customer ID'].value = editing?.['Customer ID'] || '';
   $('custSearch').value = '';
@@ -872,7 +871,7 @@ function showLinked() {
 function linkCustomer(c, fillPet) {
   form.elements['Customer ID'].value = c.ID;
   form.elements.Owner.value = c.Name;
-  form.elements.Phone.value = c.Phone;
+  form.elements.Phone.value = String(c.Phone || "").replace(/\D/g, "");
   form.elements.Email.value = c.Email || '';
   const pets = String(c.Pets || '').split(',').map(p => p.trim()).filter(Boolean);
   if (fillPet && !form.elements.Pet.value && pets.length === 1) form.elements.Pet.value = pets[0];
@@ -1008,29 +1007,6 @@ $('payDelete').onclick = async () => {
   catch (err) { $('payError').textContent = err.message; } finally { $('payDelete').disabled = false; }
 };
 
-$('block').onclick = () => {
-  if (!loaded) return;
-  blockId = uuid();
-  $('blockForm').reset();
-  $('blockForm').elements.Cage.innerHTML = data.cages.filter(c => c.Floor === section).map(c => `<option>${esc(c.Cage)}</option>`).join('');
-  $('blockList').innerHTML = data.blocks.filter(b => blockActive(b) && data.cages.some(c => c.Cage === b.Cage && c.Floor === section))
-    .map(b => `<div class="item"><span>${esc(b.Cage)} · ${esc(b.Reason)}<br><span class="muted">${pretty(b.Start)} – ${pretty(b.End)}</span></span><button type="button" class="small" data-release="${esc(b.ID)}">Return to service</button></div>`).join('');
-  $('blockError').textContent = '';
-  $('blockDialog').showModal();
-};
-$('blockForm').onsubmit = async e => {
-  e.preventDefault();
-  const button = e.submitter || e.target.querySelector("button.primary"); button.disabled = true;
-  try { data = await call('saveBlock', { ...Object.fromEntries(new FormData(e.target)), ID: blockId }); $('blockDialog').close(); render(); }
-  catch (err) { $('blockError').textContent = err.message; } finally { button.disabled = false; }
-};
-$('blockList').onclick = async e => {
-  const id = e.target.dataset.release;
-  if (!id) return;
-  e.target.disabled = true;
-  try { data = await call('releaseBlock', id); $('blockDialog').close(); render(); }
-  catch (err) { $('blockError').textContent = err.message; e.target.disabled = false; }
-};
 
 function openCustomer(c) {
   customerEdit = c || null;
@@ -1038,6 +1014,7 @@ function openCustomer(c) {
   const f = $('customerForm');
   f.reset();
   if (c) for (const k of ['Name', 'Phone', 'Email', 'Pets', 'Notes']) f.elements[k].value = c[k] || '';
+  f.elements.Phone.value = f.elements.Phone.value.replace(/\D/g, '');
   $('customerTitle').textContent = c ? c.Name : 'New customer';
   $('customerError').textContent = '';
   const stays = c ? customerBookings(c) : [];
@@ -1239,12 +1216,36 @@ $('reportPrev').onclick = () => shiftReport(-1);
 $('reportNext').onclick = () => shiftReport(1);
 for (const id of ['day', 'from', 'until', 'to', 'filter', 'bookingSection', 'bookingStatus', 'reportDay']) $(id).onchange = render;
 // Calendar on the "Today" heading: picking a date switches the whole screen to that day.
+// Phone boxes: keep digits only (typing or pasting), at most 11.
+document.addEventListener('input', e => {
+  if (e.target.name === 'Phone') {
+    const clean = e.target.value.replace(/\D/g, '').slice(0, 11);
+    if (clean !== e.target.value) e.target.value = clean;
+  }
+}, true);
 $('todayDate').onchange = () => { if ($('todayDate').value) { $('day').value = $('todayDate').value; render(); } };
 $('todayDate').onclick = () => { try { $('todayDate').showPicker(); } catch (e) { /* older browsers open it on tap anyway */ } };
 $('backToday').onclick = () => { $('day').value = today(); render(); };
 for (const id of ['bookingSearch', 'customerSearch']) $(id).oninput = render;
 // Booked cage → summary first; empty cage → straight to a new booking for that cage.
-$('grid').onclick = e => { const card = e.target.closest('[data-cage]'); if (!card) return; if (card.dataset.booking) openView(card.dataset.booking); else openBooking(null, card.dataset.cage); };
+$('grid').onclick = async e => {
+  const toggle = e.target.closest('[data-toggle]');
+  if (toggle) return toggleCage(toggle.dataset.toggle, !!toggle.dataset.disable, toggle);
+  const card = e.target.closest('[data-cage]');
+  if (!card) return;
+  const cage = data.cages.find(c => c.Cage === card.dataset.cage);
+  if (card.dataset.booking) openView(card.dataset.booking);
+  else if (cage && isDisabled(cage)) $('notice').textContent = `Cage ${cage.Cage} is disabled. Tap ✅ Enable on the card to use it again.`;
+  else openBooking(null, card.dataset.cage);
+};
+$('grid').onkeydown = e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.cage')) { e.preventDefault(); e.target.click(); } };
+async function toggleCage(name, disable, button) {
+  if (disable && !confirm(`Disable cage ${name}? It can't be booked until you enable it again.`)) return;
+  button.disabled = true;
+  $('notice').textContent = '';
+  try { data = await call('setCageDisabled', { Cage: name, disabled: disable }); render(); }
+  catch (err) { $('notice').textContent = err.message; button.disabled = false; }
+}
 $('records').onclick = e => { const row = e.target.closest('[data-booking]'); if (row) openView(row.dataset.booking); };
 $('new').onclick = $('new2').onclick = () => openBooking();
 $('close').onclick = () => $('editor').close();
