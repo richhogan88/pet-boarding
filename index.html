@@ -709,7 +709,7 @@ function makeCalendar(el, opts) {
     }
     const foot = opts.mode === 'single'
       ? `<span class="legend"><span><i class="dot in"></i>Check-in</span><span><i class="dot out"></i>Check-out</span></span><button type="button" class="small" data-today>Today</button>`
-      : `<span class="legend"><span><i class="dot in"></i>Check-in</span><span><i class="dot out"></i>Check-out</span>${opts.booked ? '<span><span class="x">12</span> Cage booked</span>' : ''}</span>${st.start ? '<button type="button" class="small" data-clear>Clear</button>' : ''}`;
+      : `<span class="legend"><span><i class="dot in"></i>Check-in</span><span><i class="dot out"></i>Check-out</span></span>${st.start ? '<button type="button" class="small" data-clear>Clear</button>' : ''}`;
     el.innerHTML = `<div class="cal">
       <div class="calHead"><button type="button" class="calNav" data-nav="-1" aria-label="Previous month">‹</button>
         <span class="sels"><select data-m aria-label="Month">${MONTHS.map((n, i) => `<option value="${i}"${i === st.m ? ' selected' : ''}>${n}</option>`).join('')}</select>
