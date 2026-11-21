@@ -55,7 +55,38 @@ label{display:grid;gap:6px;font-size:14px;font-weight:600}
 .dayPick{position:relative;display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-weight:inherit}
 .dayPick h2{margin:0}
 .calIcon{font-size:20px}
-#todayDate{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;min-height:0}
+.dayRow{position:relative}
+.dayPick{border:0;background:none;padding:0;min-height:0;color:inherit;font:inherit;text-align:left}
+.calPop{position:absolute;z-index:30;top:100%;left:0;margin-top:8px;box-shadow:0 16px 48px #102b4233}
+
+/* Calendar (month grid with check-in / check-out dots; also used to pick stay dates) */
+.cal{background:#fff;border:1px solid #d7e1e5;border-radius:14px;padding:14px;width:340px;max-width:calc(100vw - 32px);user-select:none;-webkit-user-select:none}
+.calHead{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px}
+.calHead .sels{display:flex;gap:6px}
+.calHead select{min-height:36px;padding:4px 8px;font-weight:600;font-size:15px}
+.calNav{min-height:36px;width:36px;padding:0;border:0;background:transparent;font-size:22px;color:#153d45}
+.calGrid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:2px;text-align:center}
+.calWk{font-size:12px;color:#7a8a93;padding:4px 0 6px;font-weight:600}
+.calDay{min-height:42px;padding:0;border:0;background:transparent;border-radius:10px;font-weight:500;font-size:15px;color:#162c37;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
+.calDay:hover{background:#eef3f5}
+.calDay.other{color:#b6c2c8}
+.calDay.today{box-shadow:inset 0 0 0 1.5px #176859;font-weight:700}
+.calDay.mid{background:#e5f4ed;border-radius:0}
+.calDay.sel,.calDay.rs,.calDay.re{background:#176859;color:#fff;font-weight:700}
+.calDay.rs.hasEnd{border-radius:10px 0 0 10px}
+.calDay.re{border-radius:0 10px 10px 0}
+.calDay.booked{color:#b2551f;text-decoration:line-through}
+.calDay.sel .dot,.calDay.rs .dot,.calDay.re .dot{box-shadow:0 0 0 1.5px #fff}
+.dots{display:flex;gap:3px;height:6px}
+.dot{width:6px;height:6px;border-radius:50%}
+.dot.in{background:#269575}
+.dot.out{background:#d98a2b}
+.calFoot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:#58707c}
+.legend{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend .x{color:#b2551f;text-decoration:line-through;font-weight:600}
+.stayPick{display:grid;gap:12px}
+.staySummary{font-weight:700;color:#153d45}
 .today{margin-bottom:26px}
 .todayGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .todayCard{border-top:4px solid #269575}
@@ -198,7 +229,8 @@ legend{font-weight:700;padding:0 6px}
   <section data-panel="cages">
     <div class="today">
       <div class="dayRow">
-        <label class="dayPick" title="Choose a date"><h2 id="todayTitle">Today</h2><span class="calIcon" aria-hidden="true">📅</span><input type="date" id="todayDate" aria-label="Choose a date"></label>
+        <button type="button" class="dayPick" id="dayPick" aria-haspopup="dialog" aria-expanded="false" title="Choose a date"><h2 id="todayTitle">Today</h2><span class="calIcon" aria-hidden="true">📅</span></button>
+        <div class="calPop" id="dayCalPop" hidden><div id="dayCal"></div></div>
         <button type="button" class="small" id="backToday" hidden>Back to today</button>
       </div>
       <div class="todayGrid">
@@ -325,8 +357,16 @@ legend{font-weight:700;padding:0 6px}
       <label>Phone (numbers only, 10–11 digits)<input name="Phone" type="tel" inputmode="numeric" pattern="[0-9]{10,11}" minlength="10" maxlength="11" required title="10 or 11 digits, numbers only" placeholder="e.g. 0123456789"><span id="phoneHint" class="muted"></span></label>
       <label>Email (optional)<input name="Email" type="email"></label>
       <label>Cage<select name="Cage"></select></label>
-      <label>Check-in date and time<input name="Check in" type="datetime-local" required></label>
-      <label>Checkout date and time<input name="Check out" type="datetime-local" required></label>
+      <div class="full stayPick">
+        <strong style="font-size:14px">Stay dates — tap check-in day, then checkout day</strong>
+        <div id="stayCal"></div>
+        <div class="staySummary" id="staySummary"></div>
+        <div class="formgrid">
+          <label>Check-in time<input id="inTime" type="time" required></label>
+          <label>Checkout time<input id="outTime" type="time" required></label>
+        </div>
+        <input type="hidden" name="Check in"><input type="hidden" name="Check out">
+      </div>
       <label>Status<select name="Status"><option>Booked</option><option>Checked in</option><option>Checked out</option><option>Cancelled</option></select></label>
       <p>Customer hours<br><strong id="hours">9:30 am–5:00 pm</strong></p>
       <label class="full">Care notes<textarea name="Care notes"></textarea></label>
@@ -634,6 +674,87 @@ function hoursText() {
   return fmt(hhmm(s['Opening time']) || '09:30') + '–' + fmt(hhmm(s['Closing time']) || '17:00');
 }
 
+/* ---------- Calendar component ----------
+ * mode 'single': pick one day (onPick). mode 'range': first tap = check-in, second tap = checkout (onRange).
+ * dots(date) → {in, out} counts; booked(date) → true when that night is taken (range mode).
+ */
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function makeCalendar(el, opts) {
+  const st = { y: 0, m: 0, sel: '', start: '', end: '' };
+  const fromStr = d => { st.y = +d.slice(0, 4); st.m = +d.slice(5, 7) - 1; };
+  function draw() {
+    const first = dayNum_(`${st.y}-${String(st.m + 1).padStart(2, '0')}-01`);
+    // Weeks start on Monday.
+    const lead = (new Date(first * 86400000).getUTCDay() + 6) % 7;
+    const now = today(), years = [];
+    for (let y = +now.slice(0, 4) - 2; y <= +now.slice(0, 4) + 3; y++) years.push(y);
+    if (!years.includes(st.y)) years.push(st.y);
+    let cells = '';
+    for (let i = 0; i < 42; i++) {
+      const d = dayStr_(first - lead + i), other = +d.slice(5, 7) - 1 !== st.m;
+      const cls = ['calDay'];
+      if (other) cls.push('other');
+      if (d === now) cls.push('today');
+      if (opts.mode === 'single' && d === st.sel) cls.push('sel');
+      if (opts.mode === 'range') {
+        if (d === st.start) cls.push('rs', st.end ? 'hasEnd' : 'x');
+        if (d === st.end) cls.push('re');
+        if (st.start && st.end && d > st.start && d < st.end) cls.push('mid');
+        if (opts.booked && opts.booked(d)) cls.push('booked');
+      }
+      const dots = opts.dots ? opts.dots(d) : null;
+      const dotHtml = `<span class="dots">${dots && dots.in ? '<i class="dot in"></i>' : ''}${dots && dots.out ? '<i class="dot out"></i>' : ''}</span>`;
+      const label = prettyDay(d) + (dots && dots.in ? `, ${dots.in} check-in${dots.in > 1 ? 's' : ''}` : '') + (dots && dots.out ? `, ${dots.out} check-out${dots.out > 1 ? 's' : ''}` : '');
+      cells += `<button type="button" class="${cls.join(' ')}" data-d="${d}" aria-label="${esc(label)}">${+d.slice(8)}${dotHtml}</button>`;
+    }
+    const foot = opts.mode === 'single'
+      ? `<span class="legend"><span><i class="dot in"></i>Check-in</span><span><i class="dot out"></i>Check-out</span></span><button type="button" class="small" data-today>Today</button>`
+      : `<span class="legend"><span><i class="dot in"></i>Check-in</span><span><i class="dot out"></i>Check-out</span>${opts.booked ? '<span><span class="x">12</span> Cage booked</span>' : ''}</span>${st.start ? '<button type="button" class="small" data-clear>Clear</button>' : ''}`;
+    el.innerHTML = `<div class="cal">
+      <div class="calHead"><button type="button" class="calNav" data-nav="-1" aria-label="Previous month">‹</button>
+        <span class="sels"><select data-m aria-label="Month">${MONTHS.map((n, i) => `<option value="${i}"${i === st.m ? ' selected' : ''}>${n}</option>`).join('')}</select>
+        <select data-y aria-label="Year">${years.map(y => `<option${y === st.y ? ' selected' : ''}>${y}</option>`).join('')}</select></span>
+        <button type="button" class="calNav" data-nav="1" aria-label="Next month">›</button></div>
+      <div class="calGrid">${['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map(w => `<span class="calWk">${w}</span>`).join('')}${cells}</div>
+      <div class="calFoot">${foot}</div></div>`;
+  }
+  el.addEventListener('click', e => {
+    e.stopPropagation();
+    const nav = e.target.closest('[data-nav]');
+    if (nav) { st.m += +nav.dataset.nav; if (st.m < 0) { st.m = 11; st.y--; } if (st.m > 11) { st.m = 0; st.y++; } return draw(); }
+    if (e.target.closest('[data-today]')) { const t = today(); fromStr(t); st.sel = t; draw(); return opts.onPick && opts.onPick(t); }
+    if (e.target.closest('[data-clear]')) { st.start = st.end = ''; draw(); return opts.onRange && opts.onRange('', ''); }
+    const day = e.target.closest('[data-d]');
+    if (!day) return;
+    const d = day.dataset.d;
+    if (opts.mode === 'single') { st.sel = d; draw(); return opts.onPick && opts.onPick(d); }
+    if (!st.start || st.end || d <= st.start) { st.start = d; st.end = ''; } else st.end = d;
+    if (+d.slice(5, 7) - 1 !== st.m) fromStr(d);
+    draw();
+    opts.onRange && opts.onRange(st.start, st.end);
+  });
+  el.addEventListener('change', e => {
+    if (e.target.matches('[data-m]')) st.m = +e.target.value;
+    if (e.target.matches('[data-y]')) st.y = +e.target.value;
+    draw();
+  });
+  return {
+    set(d) { st.sel = d; fromStr(d || today()); draw(); },
+    setRange(a, b) { st.start = a || ''; st.end = b || ''; fromStr(a || today()); draw(); },
+    redraw: draw,
+  };
+}
+// Check-ins / check-outs per day (cancelled bookings ignored), for the calendar dots.
+function bookingDots(d) {
+  let ins = 0, outs = 0;
+  for (const b of data.bookings) {
+    if (b.Status === 'Cancelled') continue;
+    if (String(b['Check in']).slice(0, 10) === d) ins++;
+    if (String(b['Check out']).slice(0, 10) === d) outs++;
+  }
+  return { in: ins, out: outs };
+}
+
 /* ---------- Rendering ---------- */
 function render() {
   for (const p of document.querySelectorAll('[data-panel]')) p.hidden = p.dataset.panel !== view;
@@ -648,7 +769,6 @@ function renderToday() {
   // The summary follows the page's date (the calendar on the heading and the cage calendar share it).
   const now = today(), t = $('day').value || now, tn = dayNum_(t), isToday = t === now, past = tn < dayNum_(now);
   $('todayTitle').textContent = (isToday ? 'Today · ' : '') + prettyDay(t);
-  $('todayDate').value = t;
   $('backToday').hidden = isToday;
   const onDay = isToday ? 'today' : 'on this day';
   const item = (b, late, action) => `<div class="item"><button class="link" data-booking="${esc(b.ID)}"><strong>${late ? '' : clock(late === false ? b['Check in'] : b['Check out']) + ' · '}${petText(b)}</strong><br><span class="muted">${esc(b.Cage)} · ${esc(b.Owner)} · ${esc(b.Phone)}</span></button><span>${late ? '<span class="pill late">' + late + '</span> ' : ''}${action}</span></div>`;
@@ -850,6 +970,13 @@ function openBooking(id, cage, customer) {
   }
   for (const k of ['Additional care RM per night', 'Grooming RM', 'Others RM']) if (form.elements[k].value === '') form.elements[k].value = 0;
   form.elements.Phone.value = form.elements.Phone.value.replace(/\D/g, '');
+  // Stay dates: one calendar for check-in and checkout, times underneath.
+  const ci = form.elements['Check in'].value, co = form.elements['Check out'].value;
+  stayStart = ci.slice(0, 10); stayEnd = co.slice(0, 10);
+  $('inTime').value = ci.slice(11, 16) || $('from').value || '09:30';
+  $('outTime').value = co.slice(11, 16) || $('to').value || '17:00';
+  stayCal.setRange(stayStart, stayEnd);
+  syncStay(true);
   if (!form.elements['Pets count'].value) form.elements['Pets count'].value = 1;
   form.elements['Customer ID'].value = editing?.['Customer ID'] || '';
   $('custSearch').value = '';
@@ -939,13 +1066,42 @@ function renderPayments() {
     <button type="button" class="small" data-pay="${esc(p.ID)}">Edit</button></div>`).join('') || '<p class="muted">No payments recorded.</p>';
 }
 
+/* ---------- Stay dates (booking form) ---------- */
+let stayStart = '', stayEnd = '';
+// Nights already taken in the chosen cage by another active booking (shown crossed out).
+function cageBookedNight(d) {
+  const cage = form.elements.Cage.value, n = dayNum_(d);
+  return !!cage && data.bookings.some(b => b.Cage === cage && b.ID !== draftId && isActive(b) && dayNum_(b['Check in']) <= n && dayNum_(b['Check out']) > n);
+}
+const stayCal = makeCalendar($('stayCal'), {
+  mode: 'range',
+  dots: bookingDots,
+  booked: cageBookedNight,
+  onRange: (a, b) => { stayStart = a; stayEnd = b; syncStay(); },
+});
+function syncStay(quiet) {
+  form.elements['Check in'].value = stayStart ? stayStart + 'T' + $('inTime').value : '';
+  form.elements['Check out'].value = stayEnd ? stayEnd + 'T' + $('outTime').value : '';
+  const short = d => prettyDay(d, { weekday: 'short', day: 'numeric', month: 'short' });
+  const n = stayStart && stayEnd ? dayNum_(stayEnd) - dayNum_(stayStart) : 0;
+  $('staySummary').textContent = !stayStart ? 'Tap the check-in day.'
+    : !stayEnd ? `Check-in ${short(stayStart)} — now tap the checkout day.`
+    : `${short(stayStart)} → ${short(stayEnd)} · ${n} night${n === 1 ? '' : 's'}`;
+  if (!quiet) calculate();
+}
+$('inTime').addEventListener('input', () => syncStay());
+$('outTime').addEventListener('input', () => syncStay());
+form.elements.Cage.addEventListener('change', () => stayCal.redraw());
+
 /* ---------- Event wiring ---------- */
 form.addEventListener('input', e => { if (e.target.id !== 'custSearch') calculate(); if (e.target.name === 'Phone') phoneHint(); });
-form.elements.Size.onchange = () => { cageOptions(); calculate(); };
+form.elements.Size.onchange = () => { cageOptions(); stayCal.redraw(); calculate(); };
 form.onsubmit = async e => {
   e.preventDefault();
   $('save').disabled = true;
   try {
+    if (!stayStart || !stayEnd) throw Error('Choose the stay dates on the calendar: tap the check-in day, then the checkout day.');
+    if (!$('inTime').value || !$('outTime').value) throw Error('Enter the check-in and checkout times.');
     const input = Object.fromEntries(new FormData(form));
     input.ID = draftId;
     input.Version = editing?.Version || 0;
@@ -1223,8 +1379,22 @@ document.addEventListener('input', e => {
     if (clean !== e.target.value) e.target.value = clean;
   }
 }, true);
-$('todayDate').onchange = () => { if ($('todayDate').value) { $('day').value = $('todayDate').value; render(); } };
-$('todayDate').onclick = () => { try { $('todayDate').showPicker(); } catch (e) { /* older browsers open it on tap anyway */ } };
+// Calendar on the heading: pick a day to view; dots show days with check-ins (green) and check-outs (orange).
+const dayCal = makeCalendar($('dayCal'), {
+  mode: 'single',
+  dots: bookingDots,
+  onPick: d => { $('day').value = d; closeDayCal(); render(); },
+});
+function closeDayCal() { $('dayCalPop').hidden = true; $('dayPick').setAttribute('aria-expanded', 'false'); }
+$('dayPick').onclick = e => {
+  e.stopPropagation();
+  if (!$('dayCalPop').hidden) return closeDayCal();
+  dayCal.set($('day').value || today());
+  $('dayCalPop').hidden = false;
+  $('dayPick').setAttribute('aria-expanded', 'true');
+};
+document.addEventListener('click', e => { if (!$('dayCalPop').hidden && !e.target.closest('#dayCalPop') && !e.target.closest('#dayPick')) closeDayCal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDayCal(); });
 $('backToday').onclick = () => { $('day').value = today(); render(); };
 for (const id of ['bookingSearch', 'customerSearch']) $(id).oninput = render;
 // Booked cage → summary first; empty cage → straight to a new booking for that cage.
