@@ -176,6 +176,11 @@ fieldset{border:1px solid #d7e1e5;border-radius:12px;padding:14px;margin:0}
 legend{font-weight:700;padding:0 6px}
 #breakdown{min-height:280px;background:#f2f6f7;font:15px/1.6 ui-monospace,monospace}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.confirmBox{width:min(400px,92vw)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom));z-index:60;background:#153d45;color:#fff;padding:12px 18px;border-radius:12px;font-weight:600;box-shadow:0 8px 30px #102b4240;max-width:90vw;text-align:center}
+@media(max-width:700px){#toast{bottom:calc(84px + env(safe-area-inset-bottom))}}
+.confirmBox p{font-size:17px;font-weight:600;margin:4px 0 0;line-height:1.4}
+.confirmBox .actions button{flex:1}
 .close{float:right}
 .error{color:#a02b25;white-space:pre-wrap}
 .found{display:grid;gap:6px;margin-top:6px}
@@ -533,6 +538,13 @@ legend{font-weight:700;padding:0 6px}
   </form>
 </dialog>
 
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<!-- In-app confirmation (browser pop-ups can be blocked on some phones and in-app browsers) -->
+<dialog id="confirmDialog" class="narrow confirmBox">
+  <p id="confirmText"></p>
+  <div class="actions"><button type="button" class="primary" id="confirmOk">OK</button><button type="button" id="confirmCancel">Cancel</button></div>
+</dialog>
+
 <script>
 function round2_(n) { return Math.round((Number(n) || 0) * 100) / 100; }
 function dayNum_(s) { return Math.round(Date.parse(String(s).slice(0, 10) + 'T00:00Z') / 86400000); }
@@ -661,6 +673,28 @@ const pct = r => Math.round(r * 100) + '%';
 
 // Every action sends the unlock token; the server refuses it without a valid PIN unlock.
 let token = '', locked = false, lastActivity = Date.now();
+let toastTimer = 0;
+function toast(message) {
+  $('toast').textContent = message;
+  $('toast').hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { $('toast').hidden = true; }, 2600);
+}
+// Ask a yes/no question inside the app. Resolves true (OK) or false (Cancel / Esc).
+function askConfirm(message, okLabel, danger) {
+  return new Promise(resolve => {
+    const dlg = $('confirmDialog');
+    $('confirmText').textContent = message;
+    $('confirmOk').textContent = okLabel || 'OK';
+    $('confirmOk').className = danger ? 'danger' : 'primary';
+    const done = answer => { dlg.close(); $('confirmOk').onclick = $('confirmCancel').onclick = dlg.oncancel = null; resolve(answer); };
+    $('confirmOk').onclick = () => done(true);
+    $('confirmCancel').onclick = () => done(false);
+    dlg.oncancel = e => { e.preventDefault(); done(false); };
+    dlg.showModal();
+    $('confirmOk').focus();
+  });
+}
 function call(name, arg) {
   return new Promise((resolve, reject) => {
     const fail = err => {
@@ -1236,7 +1270,7 @@ $('payForm').onsubmit = async e => {
   } catch (err) { $('payError').textContent = err.message; } finally { button.disabled = false; }
 };
 $('payDelete').onclick = async () => {
-  if (!paymentEdit || !confirm(`Delete this payment of ${money(paymentEdit['Amount RM'])}?`)) return;
+  if (!paymentEdit || !(await askConfirm(`Delete this payment of ${money(paymentEdit['Amount RM'])}?`, 'Delete payment', true))) return;
   $('payDelete').disabled = true;
   try { data = await call('deletePayment', paymentEdit.ID); $('payDialog').close(); afterPayment(); }
   catch (err) { $('payError').textContent = err.message; } finally { $('payDelete').disabled = false; }
@@ -1318,7 +1352,7 @@ $('cageForm').onsubmit = async e => {
   } catch (err) { $('cageError').textContent = err.message; } finally { button.disabled = false; }
 };
 $('cageDelete').onclick = async () => {
-  if (!cageEdit || !confirm(`Delete cage ${cageEdit.Cage}? Past bookings keep their records.`)) return;
+  if (!cageEdit || !(await askConfirm(`Delete cage ${cageEdit.Cage}? Past bookings keep their records.`, 'Delete cage', true))) return;
   $('cageDelete').disabled = true;
   try { data = await call('deleteCage', cageEdit.Cage); $('cageDialog').close(); render(); }
   catch (err) { $('cageError').textContent = err.message; } finally { $('cageDelete').disabled = false; }
@@ -1346,8 +1380,9 @@ $('pricesForm').onsubmit = async e => {
 
 async function quickStatus(id, status, errorEl) {
   const b = data.bookings.find(x => x.ID === id);
-  if (!b || !confirm(`${status === 'Checked in' ? 'Check in' : 'Check out'} ${b.Pet} (${b.Cage})?`)) return false;
-  try { data = await call('saveBooking', { ...b, Status: status }); render(); return true; }
+  const verb = status === 'Checked in' ? 'Check in' : 'Check out';
+  if (!b || !(await askConfirm(`${verb} ${b.Pet} (${b.Cage})?`, verb))) return false;
+  try { data = await call('saveBooking', { ...b, Status: status }); render(); toast(`✓ ${b.Pet} ${status === 'Checked in' ? 'checked in' : 'checked out'}`); return true; }
   catch (err) { (errorEl || $('notice')).textContent = err.message; return false; }
 }
 
@@ -1507,7 +1542,7 @@ $('grid').onclick = async e => {
 };
 $('grid').onkeydown = e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.cage')) { e.preventDefault(); e.target.click(); } };
 async function toggleCage(name, disable, button) {
-  if (disable && !confirm(`Disable cage ${name}? It can't be booked until you enable it again.`)) return;
+  if (disable && !(await askConfirm(`Disable cage ${name}? It can't be booked until you enable it again.`, 'Disable cage', true))) return;
   button.disabled = true;
   $('notice').textContent = '';
   try { data = await call('setCageDisabled', { Cage: name, disabled: disable }); render(); }
