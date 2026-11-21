@@ -35,7 +35,7 @@ h3{font-size:17px;margin:0 0 10px}
 .stat.use{border-left-color:#3b6fb0}
 .cardFoot{margin:10px 0 0}
 .cardFoot:empty{display:none}
-.cagesCard{margin-top:18px}
+.cagesCard{margin-top:14px}
 .cardHead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .cardHead h2{margin:0}
 .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:#eef3f5;border-radius:12px;padding:4px;margin-bottom:12px}
@@ -216,7 +216,7 @@ legend{font-weight:700;padding:0 6px}
 }
 /* Phones: tabs become a fixed bottom bar, like a phone app */
 @media(max-width:700px){
-  .views{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(5,1fr);gap:2px;padding:6px 6px calc(6px + env(safe-area-inset-bottom));border-top:1px solid #2c5a62;box-shadow:0 -4px 16px #102b4226}
+  .views{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(6,1fr);gap:2px;padding:6px 4px calc(6px + env(safe-area-inset-bottom));border-top:1px solid #2c5a62;box-shadow:0 -4px 16px #102b4226}
   .views button{flex-direction:column;gap:1px;border:0;min-height:52px;padding:4px 2px;font-size:11px;border-radius:10px;color:#bfd8dc}
   .views .ico{font-size:20px}
   .views button.selected{background:#ffffff22;color:#fff}
@@ -266,7 +266,8 @@ legend{font-weight:700;padding:0 6px}
   </div>
 </header>
 <nav class="views" id="views" aria-label="Sections">
-  <button data-view="cages" class="selected"><span class="ico" aria-hidden="true">🏠</span><span>Today</span></button>
+  <button data-view="today" class="selected"><span class="ico" aria-hidden="true">🏠</span><span>Today</span></button>
+  <button data-view="cages"><span class="ico" aria-hidden="true">🐕</span><span>Cages</span></button>
   <button data-view="bookings"><span class="ico" aria-hidden="true">📋</span><span>Bookings</span></button>
   <button data-view="customers"><span class="ico" aria-hidden="true">👤</span><span>Customers</span></button>
   <button data-view="reports"><span class="ico" aria-hidden="true">📊</span><span>Reports</span></button>
@@ -276,8 +277,8 @@ legend{font-weight:700;padding:0 6px}
   <div id="notice" role="status">Loading bookings…</div>
 
   <!-- TODAY + CAGES -->
-  <section data-panel="cages">
-    <!-- 1. Date bar -->
+  <!-- Date bar: shared by the Today and Cages tabs, so both always show the same day -->
+  <section data-panel="today cages">
     <div class="dateBar">
       <button type="button" class="calNav" id="dayPrev" aria-label="Previous day">‹</button>
       <div class="dayRow">
@@ -288,7 +289,10 @@ legend{font-weight:700;padding:0 6px}
     </div>
     <div class="backRow"><button type="button" class="small" id="backToday" hidden>Back to today</button></div>
 
-    <!-- 2. Day at a glance -->
+  </section>
+
+  <!-- TODAY: summary of the day -->
+  <section data-panel="today">
     <div class="stats">
       <button type="button" class="stat in" data-jump="inCard"><span>Check-ins</span><strong id="inCount">0</strong></button>
       <button type="button" class="stat out" data-jump="outCard"><span>Check-outs</span><strong id="outCount">0</strong></button>
@@ -301,7 +305,10 @@ legend{font-weight:700;padding:0 6px}
       <div class="card todayCard out" id="outCard"><h3>Check-outs</h3><div id="outList"></div><p class="muted cardFoot" id="outFoot"></p></div>
     </div>
 
-    <!-- 4. Cages -->
+  </section>
+
+  <!-- CAGES: its own tab -->
+  <section data-panel="cages">
     <div class="card cagesCard" id="cagesCard">
       <div class="cardHead"><h2>Cages</h2><span class="muted" id="summary"></span></div>
       <div class="seg" id="sections" role="tablist">
@@ -629,7 +636,7 @@ const SECTION_LABEL = { Ground: 'Dogs · Ground floor', Upper: 'Dogs · 1st floo
 const SECTION_SIZE = { Ground: 'Small', Upper: 'Medium', Cat: 'Cat' };
 const SIZE_LABEL = { Small: 'Small dog', Medium: 'Medium dog', Large: 'Large dog', Cat: 'Cat' };
 let data = { bookings: [], cages: [], rates: [], payments: [], blocks: [], settings: [], customers: [] };
-let view = 'cages', section = 'Ground', loaded = false, reportMode = 'week', pricesDirty = false;
+let view = 'today', section = 'Ground', loaded = false, reportMode = 'week', pricesDirty = false;
 let editing = null, draftId = '', paymentEdit = null, paymentId = '', blockId = '', customerEdit = null, customerDraftId = '', cageEdit = null;
 
 const money = n => 'RM' + (Number(n) || 0).toFixed(2);
@@ -824,8 +831,9 @@ function bookingDots(d) {
 
 /* ---------- Rendering ---------- */
 function render() {
-  for (const p of document.querySelectorAll('[data-panel]')) p.hidden = p.dataset.panel !== view;
-  if (view === 'cages') { renderToday(); renderCages(); }
+  for (const p of document.querySelectorAll('[data-panel]')) p.hidden = !p.dataset.panel.split(' ').includes(view);
+  if (view === 'today' || view === 'cages') renderToday();
+  if (view === 'cages') renderCages();
   if (view === 'bookings') renderBookings();
   if (view === 'customers') renderCustomers();
   if (view === 'reports') renderReport();
@@ -1411,13 +1419,16 @@ document.querySelector('.todayGrid').onclick = e => {
   if (row) openView(row.dataset.booking);
 };
 for (const el of document.querySelectorAll('[data-close]')) el.onclick = () => $(el.dataset.close).close();
-$('views').onclick = e => {
-  const b = e.target.closest('[data-view]');
-  if (!b) return;
-  view = b.dataset.view;
-  for (const x of $('views').children) x.classList.toggle('selected', x === b);
+function showView(name) {
+  view = name;
+  for (const x of $('views').children) x.classList.toggle('selected', x.dataset.view === name);
   if (view === 'manage') pricesDirty = false;
   render();
+  window.scrollTo(0, 0);
+}
+$('views').onclick = e => {
+  const b = e.target.closest('[data-view]');
+  if (b) showView(b.dataset.view);
 };
 $('sections').onclick = e => {
   const b = e.target.closest('[data-section]');
@@ -1479,6 +1490,7 @@ $('chips').onclick = e => {
 };
 document.querySelector('.stats').onclick = e => {
   const tile = e.target.closest('[data-jump]');
+  if (tile && tile.dataset.jump === 'cagesCard') return showView('cages');
   if (tile) $(tile.dataset.jump).scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 for (const id of ['bookingSearch', 'customerSearch']) $(id).oninput = render;
