@@ -3,18 +3,16 @@
 <head>
 <script>window.API_URL = "https://script.google.com/macros/s/AKfycbx7VSeg2mhxGHB8Gw9rrsh3702tHs1-WTcvKBd3-Ui6Zz9I-i897I2GFNNXVWrDyhuOYQ/exec";</script>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Pettie Pet">
-<meta name="theme-color" content="#153d45">
-<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Pettie Pet</title>
 <style>
 [hidden]{display:none!important}
 *{box-sizing:border-box}
 body{margin:0;background:#f3f6f8;color:#162c37;font:16px system-ui,sans-serif}
-header{background:#153d45;color:#fff;padding:20px 5% 14px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+header{background:#153d45;color:#fff;padding:18px 5% 12px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.hdrActions{display:flex;gap:8px;align-items:center}
+.iconBtn{width:44px;padding:0;font-size:20px;background:transparent;color:#fff;border-color:#3f6a72}
+.hdrNew,button.primary.hdrNew{white-space:nowrap;background:#fff;color:#153d45;border-color:#fff}
 h1{font-size:26px;margin:0}
 header small{color:#bfd8dc}
 h2{font-size:22px;margin:0 0 14px}
@@ -22,6 +20,32 @@ h3{font-size:17px;margin:0 0 10px}
 .views{background:#153d45;padding:0 5% 14px;display:flex;gap:8px;overflow-x:auto}
 .views button{background:transparent;color:#d9ecef;border-color:#3f6a72;white-space:nowrap}
 .views button.selected{background:#fff;color:#153d45;border-color:#fff}
+.views .ico{font-size:16px}
+
+/* Today screen structure */
+.dateBar{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:1px solid #d7e1e5;border-radius:12px;padding:8px 10px}
+.dateBar .dayRow{flex:1;display:flex;justify-content:center;margin:0}
+.dateBar h2{font-size:20px}
+.backRow{display:flex;justify-content:center;margin:8px 0 0}
+.backRow:has(#backToday[hidden]){display:none}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.stat{display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:#fff;border:1px solid #d7e1e5;border-left:4px solid #269575;border-radius:12px;padding:10px 12px;min-height:0;font-weight:600;color:#58707c;font-size:13px;text-align:left}
+.stat strong{font-size:26px;color:#153d45;line-height:1.1}
+.stat.out{border-left-color:#d98a2b}
+.stat.use{border-left-color:#3b6fb0}
+.cardFoot{margin:10px 0 0}
+.cardFoot:empty{display:none}
+.cagesCard{margin-top:14px}
+.cardHead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.cardHead h2{margin:0}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:#eef3f5;border-radius:12px;padding:4px;margin-bottom:12px}
+.seg button{border:0;background:transparent;min-height:46px;padding:6px 4px;border-radius:9px;flex-direction:column;gap:0;font-size:14px;line-height:1.2;color:#3e5560}
+.seg button small{font-weight:500;font-size:12px;color:#7a8a93}
+.seg button.selected{background:#fff;color:#153d45;box-shadow:0 1px 3px #102b4226}
+.seg button.selected small{color:#58707c}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none}
+.chip{min-height:34px;padding:4px 14px;border-radius:999px;font-size:14px;white-space:nowrap;font-weight:600}
+.chip.selected{background:#153d45;color:#fff;border-color:#153d45}
 main{max-width:1250px;margin:auto;padding:24px 28px 40px}
 button,input,select,textarea,.button{font:inherit;border-radius:9px;border:1px solid #bccbd1;padding:10px 12px;min-height:44px}
 button,.button{cursor:pointer;background:#fff;color:#173e46;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
@@ -88,7 +112,7 @@ label{display:grid;gap:6px;font-size:14px;font-weight:600}
 .stayPick{display:grid;gap:12px}
 .staySummary{font-weight:700;color:#153d45}
 .today{margin-bottom:26px}
-.todayGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.todayGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 .todayCard{border-top:4px solid #269575}
 .todayCard.out{border-top-color:#c17536}
 .todayCard.stay{border-top-color:#3b6fb0}
@@ -101,16 +125,23 @@ label{display:grid;gap:6px;font-size:14px;font-weight:600}
 
 /* Cages */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:14px}
-.cage{position:relative;text-align:left;background:#fff;border:1px solid #d7e1e5;border-top:4px solid #269575;border-radius:12px;padding:18px;min-height:180px;display:block;width:100%;cursor:pointer;color:inherit}
+.cage{position:relative;text-align:left;background:#fff;border:1px solid #d7e1e5;border-top:4px solid #269575;border-radius:12px;padding:12px 14px;min-height:118px;display:flex;flex-direction:column;gap:6px;width:100%;cursor:pointer;color:inherit}
+.cageTop{display:flex;align-items:center;gap:6px;min-width:0}
+.cage>.pill{align-self:flex-start;font-size:12px;padding:2px 8px;white-space:nowrap}
+.cagesCard .grid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+.cage{min-width:0}
+.cageTop h3{margin:0}
+.cage .who{font-weight:700;font-size:15px}
+.cage .when{font-size:13px;color:#58707c}
 .cage.st-booked{border-top-color:#d98a2b}
 .cage.st-checkedin{border-top-color:#3b6fb0}
 .cage.st-disabled{border-top-color:#3d4a52;background:#f1f3f5}
 .cage.st-disabled h3,.cage.st-disabled p{color:#6b7780}
 .cage:focus-visible{outline:3px solid #176859;outline-offset:2px}
-.cageToggle{position:absolute;top:10px;right:10px;min-height:34px;padding:4px 10px;font-size:13px;font-weight:600;border-radius:8px;white-space:nowrap}
+.cageToggle{margin-left:auto;flex-shrink:0;min-height:34px;padding:4px 10px;font-size:13px;font-weight:600;border-radius:8px;white-space:nowrap}
 .cageToggle.enable{background:#176859;color:#fff;border-color:#176859}
-.cage h3{font-size:25px;margin:0 0 10px}
-.cage p{font-size:14px;line-height:1.6;margin:8px 0;font-weight:400}
+.cage h3{font-size:22px;margin:0}
+.cage p{font-size:14px;line-height:1.45;margin:0;font-weight:400}
 #summary{margin:6px 0 14px}
 .list{display:grid;gap:10px}
 .record{text-align:left;padding:14px 16px;background:#fff;display:block;width:100%;font-weight:400;line-height:1.55}
@@ -145,6 +176,11 @@ fieldset{border:1px solid #d7e1e5;border-radius:12px;padding:14px;margin:0}
 legend{font-weight:700;padding:0 6px}
 #breakdown{min-height:280px;background:#f2f6f7;font:15px/1.6 ui-monospace,monospace}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.confirmBox{width:min(400px,92vw)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom));z-index:60;background:#153d45;color:#fff;padding:12px 18px;border-radius:12px;font-weight:600;box-shadow:0 8px 30px #102b4240;max-width:90vw;text-align:center}
+@media(max-width:700px){#toast{bottom:calc(84px + env(safe-area-inset-bottom))}}
+.confirmBox p{font-size:17px;font-weight:600;margin:4px 0 0;line-height:1.4}
+.confirmBox .actions button{flex:1}
 .close{float:right}
 .error{color:#a02b25;white-space:pre-wrap}
 .found{display:grid;gap:6px;margin-top:6px}
@@ -183,6 +219,16 @@ legend{font-weight:700;padding:0 6px}
 @media(max-width:800px){
   .todayGrid,.manageGrid,.twoCol{grid-template-columns:1fr}
 }
+/* Phones: tabs become a fixed bottom bar, like a phone app */
+@media(max-width:700px){
+  .views{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(6,1fr);gap:2px;padding:6px 4px calc(6px + env(safe-area-inset-bottom));border-top:1px solid #2c5a62;box-shadow:0 -4px 16px #102b4226}
+  .views button{flex-direction:column;gap:1px;border:0;min-height:52px;padding:4px 2px;font-size:11px;border-radius:10px;color:#bfd8dc}
+  .views .ico{font-size:20px}
+  .views button.selected{background:#ffffff22;color:#fff}
+  main{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+  .hideSm{display:none}
+  header small{display:none}
+}
 @media(max-width:600px){
   main{padding:16px}
   header{padding:16px 16px 12px}
@@ -190,9 +236,14 @@ legend{font-weight:700;padding:0 6px}
   h1{font-size:21px}
   .formgrid,.priceGrid{grid-template-columns:1fr}
   .full{grid-column:auto}
-  .grid{grid-template-columns:1fr 1fr;gap:10px}
-  .cage{padding:12px;min-height:170px}
-  .cage h3{font-size:21px}
+  .grid,.cagesCard .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .cageToggle{min-height:30px;padding:2px 6px}
+  .cage{padding:10px 12px;min-height:108px}
+  .cage h3{font-size:19px}
+  .stat{padding:8px 10px}
+  .stat strong{font-size:22px}
+  .dateBar h2{font-size:17px}
+  .card{padding:14px}
   dialog{padding:16px}
   .toolbar label{flex:1 1 40%}
   .toolbar input,.toolbar select{width:100%}
@@ -212,49 +263,77 @@ legend{font-weight:700;padding:0 6px}
   </form>
 </div>
 <header>
-  <div><h1>Pettie Pet</h1><small>Bookings & cage availability</small></div>
-  <div style="display:flex;gap:8px"><button id="refresh">Refresh</button><button id="lockNow" hidden>Lock</button></div>
+  <div class="brand"><h1>Pettie Pet</h1><small>Bookings & cage availability</small></div>
+  <div class="hdrActions">
+    <button id="new" class="primary hdrNew">+ New<span class="hideSm">&nbsp;booking</span></button>
+    <button id="refresh" class="iconBtn" aria-label="Refresh" title="Refresh">↻</button>
+    <button id="lockNow" class="iconBtn" aria-label="Lock" title="Lock" hidden>🔒</button>
+  </div>
 </header>
-<nav class="views" id="views">
-  <button data-view="cages" class="selected">Today & cages</button>
-  <button data-view="bookings">Bookings</button>
-  <button data-view="customers">Customers</button>
-  <button data-view="reports">Reports</button>
-  <button data-view="manage">Prices & cages</button>
+<nav class="views" id="views" aria-label="Sections">
+  <button data-view="today" class="selected"><span class="ico" aria-hidden="true">🏠</span><span>Today</span></button>
+  <button data-view="cages"><span class="ico" aria-hidden="true">🐕</span><span>Cages</span></button>
+  <button data-view="bookings"><span class="ico" aria-hidden="true">📋</span><span>Bookings</span></button>
+  <button data-view="customers"><span class="ico" aria-hidden="true">👤</span><span>Customers</span></button>
+  <button data-view="reports"><span class="ico" aria-hidden="true">📊</span><span>Reports</span></button>
+  <button data-view="manage"><span class="ico" aria-hidden="true">⚙️</span><span>Settings</span></button>
 </nav>
 <main>
   <div id="notice" role="status">Loading bookings…</div>
 
   <!-- TODAY + CAGES -->
-  <section data-panel="cages">
-    <div class="today">
+  <!-- Date bar: shared by the Today and Cages tabs, so both always show the same day -->
+  <section data-panel="today cages">
+    <div class="dateBar">
+      <button type="button" class="calNav" id="dayPrev" aria-label="Previous day">‹</button>
       <div class="dayRow">
         <button type="button" class="dayPick" id="dayPick" aria-haspopup="dialog" aria-expanded="false" title="Choose a date"><h2 id="todayTitle">Today</h2><span class="calIcon" aria-hidden="true">📅</span></button>
         <div class="calPop" id="dayCalPop" hidden><div id="dayCal"></div></div>
-        <button type="button" class="small" id="backToday" hidden>Back to today</button>
       </div>
-      <div class="todayGrid">
-        <div class="card todayCard"><h3>Check-ins <span class="count" id="inCount">0</span></h3><div id="inList"></div></div>
-        <div class="card todayCard out"><h3>Check-outs <span class="count" id="outCount">0</span></h3><div id="outList"></div></div>
-        <div class="card todayCard stay"><h3>Cages in use <span class="count" id="stayCount">0</span></h3><div id="stayList"></div></div>
+      <button type="button" class="calNav" id="dayNext" aria-label="Next day">›</button>
+    </div>
+    <div class="backRow"><button type="button" class="small" id="backToday" hidden>Back to today</button></div>
+
+  </section>
+
+  <!-- TODAY: summary of the day -->
+  <section data-panel="today">
+    <div class="stats">
+      <button type="button" class="stat in" data-jump="inCard"><span>Check-ins</span><strong id="inCount">0</strong></button>
+      <button type="button" class="stat out" data-jump="outCard"><span>Check-outs</span><strong id="outCount">0</strong></button>
+      <button type="button" class="stat use" data-jump="cagesCard"><span>Cages in use</span><strong id="stayCount">0</strong></button>
+    </div>
+
+    <!-- 3. Arrivals and departures -->
+    <div class="todayGrid">
+      <div class="card todayCard" id="inCard"><h3>Check-ins</h3><div id="inList"></div></div>
+      <div class="card todayCard out" id="outCard"><h3>Check-outs</h3><div id="outList"></div><p class="muted cardFoot" id="outFoot"></p></div>
+    </div>
+
+  </section>
+
+  <!-- CAGES: its own tab -->
+  <section data-panel="cages">
+    <div class="card cagesCard" id="cagesCard">
+      <div class="cardHead"><h2>Cages</h2><span class="muted" id="summary"></span></div>
+      <div class="seg" id="sections" role="tablist">
+        <button data-section="Ground" class="selected" title="Dogs · Ground floor"><span>🐶 Ground</span><small data-seg="Ground"></small></button>
+        <button data-section="Upper" title="Dogs · 1st floor"><span>🐶 1st floor</span><small data-seg="Upper"></small></button>
+        <button data-section="Cat" title="Cats"><span>🐱 Cats</span><small data-seg="Cat"></small></button>
       </div>
-    </div>
-    <div class="tabs" id="sections">
-      <button data-section="Ground" class="selected">Dogs · Ground floor</button>
-      <button data-section="Upper">Dogs · 1st floor</button>
-      <button data-section="Cat">Cats</button>
-    </div>
-    <div class="toolbar">
-      <label>Calendar date<input id="day" type="date"></label>
-      <label>From<input id="from" type="time" value="09:30"></label>
-      <label>Until date (optional)<input id="until" type="date"></label>
-      <label>Until time<input id="to" type="time" value="17:00"></label>
-    </div>
-    <div class="toolbar">
-      <label>Show<select id="filter"><option>All cages</option><option>Available</option><option>Booked</option><option>Checked in</option><option>Checkouts</option><option>Disabled</option></select></label>
-      <button id="new" class="primary">New booking</button>
-    </div>
-    <h2 id="summary"></h2>
+      <div class="chips" id="chips">
+        <button class="chip selected" data-filter="All cages">All</button>
+        <button class="chip" data-filter="Available">Available</button>
+        <button class="chip" data-filter="Booked">Booked</button>
+        <button class="chip" data-filter="Checked in">Checked in</button>
+        <button class="chip" data-filter="Checkouts">Checking out</button>
+        <button class="chip" data-filter="Disabled">Disabled</button>
+      </div>
+      <!-- Kept for the booking form defaults (opening hours / selected day); not shown. -->
+      <div hidden>
+        <input id="day" type="date"><input id="from" type="time" value="09:30"><input id="until" type="date"><input id="to" type="time" value="17:00">
+        <select id="filter"><option>All cages</option><option>Available</option><option>Booked</option><option>Checked in</option><option>Checkouts</option><option>Disabled</option></select>
+      </div>
     <div id="grid" class="grid"></div>
   </section>
 
@@ -459,6 +538,13 @@ legend{font-weight:700;padding:0 6px}
   </form>
 </dialog>
 
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<!-- In-app confirmation (browser pop-ups can be blocked on some phones and in-app browsers) -->
+<dialog id="confirmDialog" class="narrow confirmBox">
+  <p id="confirmText"></p>
+  <div class="actions"><button type="button" class="primary" id="confirmOk">OK</button><button type="button" id="confirmCancel">Cancel</button></div>
+</dialog>
+
 <script>
 function round2_(n) { return Math.round((Number(n) || 0) * 100) / 100; }
 function dayNum_(s) { return Math.round(Date.parse(String(s).slice(0, 10) + 'T00:00Z') / 86400000); }
@@ -562,7 +648,7 @@ const SECTION_LABEL = { Ground: 'Dogs · Ground floor', Upper: 'Dogs · 1st floo
 const SECTION_SIZE = { Ground: 'Small', Upper: 'Medium', Cat: 'Cat' };
 const SIZE_LABEL = { Small: 'Small dog', Medium: 'Medium dog', Large: 'Large dog', Cat: 'Cat' };
 let data = { bookings: [], cages: [], rates: [], payments: [], blocks: [], settings: [], customers: [] };
-let view = 'cages', section = 'Ground', loaded = false, reportMode = 'week', pricesDirty = false;
+let view = 'today', section = 'Ground', loaded = false, reportMode = 'week', pricesDirty = false;
 let editing = null, draftId = '', paymentEdit = null, paymentId = '', blockId = '', customerEdit = null, customerDraftId = '', cageEdit = null;
 
 const money = n => 'RM' + (Number(n) || 0).toFixed(2);
@@ -587,6 +673,28 @@ const pct = r => Math.round(r * 100) + '%';
 
 // Every action sends the unlock token; the server refuses it without a valid PIN unlock.
 let token = '', locked = false, lastActivity = Date.now();
+let toastTimer = 0;
+function toast(message) {
+  $('toast').textContent = message;
+  $('toast').hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { $('toast').hidden = true; }, 2600);
+}
+// Ask a yes/no question inside the app. Resolves true (OK) or false (Cancel / Esc).
+function askConfirm(message, okLabel, danger) {
+  return new Promise(resolve => {
+    const dlg = $('confirmDialog');
+    $('confirmText').textContent = message;
+    $('confirmOk').textContent = okLabel || 'OK';
+    $('confirmOk').className = danger ? 'danger' : 'primary';
+    const done = answer => { dlg.close(); $('confirmOk').onclick = $('confirmCancel').onclick = dlg.oncancel = null; resolve(answer); };
+    $('confirmOk').onclick = () => done(true);
+    $('confirmCancel').onclick = () => done(false);
+    dlg.oncancel = e => { e.preventDefault(); done(false); };
+    dlg.showModal();
+    $('confirmOk').focus();
+  });
+}
 function call(name, arg) {
   return new Promise((resolve, reject) => {
     const fail = err => {
@@ -757,8 +865,9 @@ function bookingDots(d) {
 
 /* ---------- Rendering ---------- */
 function render() {
-  for (const p of document.querySelectorAll('[data-panel]')) p.hidden = p.dataset.panel !== view;
-  if (view === 'cages') { renderToday(); renderCages(); }
+  for (const p of document.querySelectorAll('[data-panel]')) p.hidden = !p.dataset.panel.split(' ').includes(view);
+  if (view === 'today' || view === 'cages') renderToday();
+  if (view === 'cages') renderCages();
   if (view === 'bookings') renderBookings();
   if (view === 'customers') renderCustomers();
   if (view === 'reports') renderReport();
@@ -768,7 +877,7 @@ function render() {
 function renderToday() {
   // The summary follows the page's date (the calendar on the heading and the cage calendar share it).
   const now = today(), t = $('day').value || now, tn = dayNum_(t), isToday = t === now, past = tn < dayNum_(now);
-  $('todayTitle').textContent = (isToday ? 'Today · ' : '') + prettyDay(t);
+  $('todayTitle').textContent = (isToday ? 'Today · ' : '') + prettyDay(t, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
   $('backToday').hidden = isToday;
   const onDay = isToday ? 'today' : 'on this day';
   const item = (b, late, action) => `<div class="item"><button class="link" data-booking="${esc(b.ID)}"><strong>${late ? '' : clock(late === false ? b['Check in'] : b['Check out']) + ' · '}${petText(b)}</strong><br><span class="muted">${esc(b.Cage)} · ${esc(b.Owner)} · ${esc(b.Phone)}</span></button><span>${late ? '<span class="pill late">' + late + '</span> ' : ''}${action}</span></div>`;
@@ -795,14 +904,17 @@ function renderToday() {
   // Overdue pets (still checked in after their checkout date) are still in their cage today.
   const inUse = b => (b.Status !== 'Cancelled' && (past || isActive(b)) && dayNum_(b['Check in']) <= tn && dayNum_(b['Check out']) >= tn)
     || (isToday && b.Status === 'Checked in' && dayNum_(b['Check in']) <= tn);
-  let total = 0;
-  $('stayList').innerHTML = ['Ground', 'Upper', 'Cat'].map(s => {
+  // Cages in use per section are shown on the section buttons ("3 / 10 in use"); the total on the "Cages in use" tile.
+  let total = 0, all = 0;
+  for (const s of ['Ground', 'Upper', 'Cat']) {
     const cages = data.cages.filter(c => c.Floor === s);
     const used = cages.filter(c => data.bookings.some(b => b.Cage === c.Cage && inUse(b))).length;
-    total += used;
-    return `<div class="stayRow"><span>${SECTION_LABEL[s]}</span><strong>${used} / ${cages.length} cages</strong></div>`;
-  }).join('') + `<p class="muted">Includes pets checking out ${onDay}.</p><p class="muted">Balance due on ${isToday ? "today's" : "this day's"} check-outs: ${money(outs.reduce((n, b) => n + Math.max(0, Number(b['Balance RM']) || 0), 0))}</p>`;
-  $('stayCount').textContent = total;
+    total += used; all += cages.length;
+    document.querySelector(`[data-seg="${s}"]`).textContent = `${used} / ${cages.length} in use`;
+  }
+  $('stayCount').textContent = `${total}/${all}`;
+  const due = outs.reduce((n, b) => n + Math.max(0, Number(b['Balance RM']) || 0), 0);
+  $('outFoot').textContent = outs.length ? `Balance due on ${isToday ? "today's" : "this day's"} check-outs: ${money(due)}` : '';
 }
 
 function bounds() {
@@ -829,13 +941,14 @@ function renderCages() {
     const toggle = off
       ? `<button type="button" class="cageToggle enable" data-toggle="${esc(c.Cage)}" data-disable="" aria-label="Enable cage ${esc(c.Cage)}">✅ Enable</button>`
       : `<button type="button" class="cageToggle" data-toggle="${esc(c.Cage)}" data-disable="1" aria-label="Disable cage ${esc(c.Cage)}" title="Disable this cage">⛔</button>`;
+    const short = v => new Date(stamp(v)).toLocaleDateString('en-MY', { timeZone: 'Asia/Kuala_Lumpur', day: 'numeric', month: 'short' });
     return `<div class="cage ${pillClass(status)}" role="button" tabindex="0" data-cage="${esc(c.Cage)}" data-booking="${esc(bookings[0]?.ID || '')}">
-      ${toggle}<h3>${esc(c.Cage)}</h3>${statusPill(status)}
-      ${bookings.map(b => `<p><strong>${petText(b)}</strong><br>In ${pretty(b['Check in'])}<br>Out ${pretty(b['Check out'])}</p>`).join('')}
-      ${off ? '<p>Not available for booking until enabled.</p>' : ''}
-      ${status === 'Available' ? '<p>Free for selected period</p>' : ''}${!off && next ? `<p>Next · ${pretty(next['Check in'])}</p>` : ''}</div>`;
+      <div class="cageTop"><h3>${esc(c.Cage)}</h3>${toggle}</div>${statusPill(status)}
+      ${bookings.map(b => `<div><div class="who">${petText(b)}</div><div class="when">${short(b['Check in'])} → ${short(b['Check out'])}</div></div>`).join('')}
+      ${off ? '<p class="when">Not bookable until enabled.</p>' : ''}
+      ${status === 'Available' ? '<p class="when">Free all day</p>' : ''}${!off && next ? `<p class="when">Next: ${short(next['Check in'])}</p>` : ''}</div>`;
   });
-  $('summary').textContent = `${SECTION_LABEL[section]} · ${available} of ${cages.length} cages available` + (disabledCount ? ` · ${disabledCount} disabled` : '');
+  $('summary').textContent = `${available} of ${cages.length} free` + (disabledCount ? ` · ${disabledCount} disabled` : '');
   $('grid').innerHTML = cards.join('') || '<p class="muted">No cages match.</p>';
 }
 
@@ -1157,7 +1270,7 @@ $('payForm').onsubmit = async e => {
   } catch (err) { $('payError').textContent = err.message; } finally { button.disabled = false; }
 };
 $('payDelete').onclick = async () => {
-  if (!paymentEdit || !confirm(`Delete this payment of ${money(paymentEdit['Amount RM'])}?`)) return;
+  if (!paymentEdit || !(await askConfirm(`Delete this payment of ${money(paymentEdit['Amount RM'])}?`, 'Delete payment', true))) return;
   $('payDelete').disabled = true;
   try { data = await call('deletePayment', paymentEdit.ID); $('payDialog').close(); afterPayment(); }
   catch (err) { $('payError').textContent = err.message; } finally { $('payDelete').disabled = false; }
@@ -1239,7 +1352,7 @@ $('cageForm').onsubmit = async e => {
   } catch (err) { $('cageError').textContent = err.message; } finally { button.disabled = false; }
 };
 $('cageDelete').onclick = async () => {
-  if (!cageEdit || !confirm(`Delete cage ${cageEdit.Cage}? Past bookings keep their records.`)) return;
+  if (!cageEdit || !(await askConfirm(`Delete cage ${cageEdit.Cage}? Past bookings keep their records.`, 'Delete cage', true))) return;
   $('cageDelete').disabled = true;
   try { data = await call('deleteCage', cageEdit.Cage); $('cageDialog').close(); render(); }
   catch (err) { $('cageError').textContent = err.message; } finally { $('cageDelete').disabled = false; }
@@ -1267,8 +1380,9 @@ $('pricesForm').onsubmit = async e => {
 
 async function quickStatus(id, status, errorEl) {
   const b = data.bookings.find(x => x.ID === id);
-  if (!b || !confirm(`${status === 'Checked in' ? 'Check in' : 'Check out'} ${b.Pet} (${b.Cage})?`)) return false;
-  try { data = await call('saveBooking', { ...b, Status: status }); render(); return true; }
+  const verb = status === 'Checked in' ? 'Check in' : 'Check out';
+  if (!b || !(await askConfirm(`${verb} ${b.Pet} (${b.Cage})?`, verb))) return false;
+  try { data = await call('saveBooking', { ...b, Status: status }); render(); toast(`✓ ${b.Pet} ${status === 'Checked in' ? 'checked in' : 'checked out'}`); return true; }
   catch (err) { (errorEl || $('notice')).textContent = err.message; return false; }
 }
 
@@ -1333,20 +1447,23 @@ $('viewer').addEventListener('click', async e => {
   if (cust) { $('viewer').close(); openCustomer(data.customers.find(c => c.ID === cust.dataset.viewCustomer)); }
 });
 
-document.querySelector('[data-panel="cages"] .today').onclick = e => {
+document.querySelector('.todayGrid').onclick = e => {
   const act = e.target.closest('[data-act]');
   if (act) return quickStatus(act.dataset.id, act.dataset.act);
   const row = e.target.closest('[data-booking]');
   if (row) openView(row.dataset.booking);
 };
 for (const el of document.querySelectorAll('[data-close]')) el.onclick = () => $(el.dataset.close).close();
-$('views').onclick = e => {
-  const b = e.target.closest('[data-view]');
-  if (!b) return;
-  view = b.dataset.view;
-  for (const x of $('views').children) x.classList.toggle('selected', x === b);
+function showView(name) {
+  view = name;
+  for (const x of $('views').children) x.classList.toggle('selected', x.dataset.view === name);
   if (view === 'manage') pricesDirty = false;
   render();
+  window.scrollTo(0, 0);
+}
+$('views').onclick = e => {
+  const b = e.target.closest('[data-view]');
+  if (b) showView(b.dataset.view);
 };
 $('sections').onclick = e => {
   const b = e.target.closest('[data-section]');
@@ -1396,6 +1513,21 @@ $('dayPick').onclick = e => {
 document.addEventListener('click', e => { if (!$('dayCalPop').hidden && !e.target.closest('#dayCalPop') && !e.target.closest('#dayPick')) closeDayCal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDayCal(); });
 $('backToday').onclick = () => { $('day').value = today(); render(); };
+const shiftDay = n => { $('day').value = dayStr_(dayNum_($('day').value || today()) + n); render(); };
+$('dayPrev').onclick = () => shiftDay(-1);
+$('dayNext').onclick = () => shiftDay(1);
+$('chips').onclick = e => {
+  const chip = e.target.closest('[data-filter]');
+  if (!chip) return;
+  $('filter').value = chip.dataset.filter;
+  for (const c of $('chips').children) c.classList.toggle('selected', c === chip);
+  render();
+};
+document.querySelector('.stats').onclick = e => {
+  const tile = e.target.closest('[data-jump]');
+  if (tile && tile.dataset.jump === 'cagesCard') return showView('cages');
+  if (tile) $(tile.dataset.jump).scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
 for (const id of ['bookingSearch', 'customerSearch']) $(id).oninput = render;
 // Booked cage → summary first; empty cage → straight to a new booking for that cage.
 $('grid').onclick = async e => {
@@ -1410,7 +1542,7 @@ $('grid').onclick = async e => {
 };
 $('grid').onkeydown = e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.cage')) { e.preventDefault(); e.target.click(); } };
 async function toggleCage(name, disable, button) {
-  if (disable && !confirm(`Disable cage ${name}? It can't be booked until you enable it again.`)) return;
+  if (disable && !(await askConfirm(`Disable cage ${name}? It can't be booked until you enable it again.`, 'Disable cage', true))) return;
   button.disabled = true;
   $('notice').textContent = '';
   try { data = await call('setCageDisabled', { Cage: name, disabled: disable }); render(); }
