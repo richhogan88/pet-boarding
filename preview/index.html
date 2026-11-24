@@ -176,6 +176,11 @@ fieldset{border:1px solid #d7e1e5;border-radius:12px;padding:14px;margin:0}
 legend{font-weight:700;padding:0 6px}
 #breakdown{min-height:280px;background:#f2f6f7;font:15px/1.6 ui-monospace,monospace}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+/* Progress bar: shown while the app is talking to Google */
+body::before{content:'';position:fixed;top:0;left:0;height:3px;width:30%;z-index:100;background:#5fd3a8;opacity:0;transform:translateX(-100%);pointer-events:none}
+body.busy::before{opacity:1;animation:busyBar 1.1s ease-in-out infinite}
+@keyframes busyBar{0%{transform:translateX(-100%)}100%{transform:translateX(340%)}}
+.saving{opacity:.65}
 .confirmBox{width:min(400px,92vw)}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom));z-index:60;background:#153d45;color:#fff;padding:12px 18px;border-radius:12px;font-weight:600;box-shadow:0 8px 30px #102b4240;max-width:90vw;text-align:center}
 @media(max-width:700px){#toast{bottom:calc(84px + env(safe-area-inset-bottom))}}
@@ -695,7 +700,14 @@ function askConfirm(message, okLabel, danger) {
     $('confirmOk').focus();
   });
 }
+// Thin progress bar at the top whenever the app is talking to Google.
+let pending = 0;
+function busy(delta) { pending = Math.max(0, pending + delta); document.body.classList.toggle('busy', pending > 0); }
 function call(name, arg) {
+  busy(1);
+  return callRaw(name, arg).finally(() => busy(-1));
+}
+function callRaw(name, arg) {
   return new Promise((resolve, reject) => {
     const fail = err => {
       const msg = String(err && err.message);
@@ -750,8 +762,8 @@ $('lockForm').onsubmit = async e => {
     lastActivity = Date.now();
     $('lock').hidden = true;
     $('pinInput').value = '';
-    $('notice').textContent = 'Loading bookings…';
-    await refresh();
+    if (res.data) applyData(res.data);
+    else { $('notice').textContent = 'Loading bookings…'; await refresh(); }
   } catch (err) {
     $('pinError').textContent = err.message;
     $('pinInput').value = '';
@@ -761,14 +773,21 @@ $('lockForm').onsubmit = async e => {
 // Lock automatically after 10 minutes without any taps or typing (like a phone screen).
 for (const ev of ['pointerdown', 'keydown']) document.addEventListener(ev, () => { lastActivity = Date.now(); }, true);
 setInterval(() => { if (window.PIN_ENABLED && !locked && Date.now() - lastActivity > 10 * 60000) lockApp('Locked after 10 minutes without use.'); }, 30000);
-async function refresh() {
+function applyData(d) {
+  data = d;
+  if (!loaded) applyHours();
+  loaded = true;
+  $('notice').textContent = '';
+  render();
+  $('updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+}
+// fresh=true (the ↻ button) reads the Google Sheet itself; otherwise the fast copy is used.
+let saving = 0;
+async function refresh(fresh) {
   try {
-    data = await call('getData');
-    if (!loaded) applyHours();
-    loaded = true;
-    $('notice').textContent = '';
-    render();
-    $('updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+    const d = await call('getData', { fresh: !!fresh });
+    // Don't overwrite the screen while an instant change is still being saved.
+    if (!saving) applyData(d);
   } catch (e) {
     $('notice').textContent = e.message + (loaded ? ' Showing the last data loaded.' : '');
   }
@@ -1382,8 +1401,25 @@ async function quickStatus(id, status, errorEl) {
   const b = data.bookings.find(x => x.ID === id);
   const verb = status === 'Checked in' ? 'Check in' : 'Check out';
   if (!b || !(await askConfirm(`${verb} ${b.Pet} (${b.Cage})?`, verb))) return false;
-  try { data = await call('saveBooking', { ...b, Status: status }); render(); toast(`✓ ${b.Pet} ${status === 'Checked in' ? 'checked in' : 'checked out'}`); return true; }
-  catch (err) { (errorEl || $('notice')).textContent = err.message; return false; }
+  // Instant: update the screen first, save in the background, undo if Google refuses.
+  const before = data, done = status === 'Checked in' ? 'checked in' : 'checked out';
+  data = { ...data, bookings: data.bookings.map(x => (x.ID === id ? { ...x, Status: status } : x)) };
+  render();
+  toast(`Saving… ${b.Pet} ${done}`);
+  saving++;
+  try {
+    const fresh = await call('saveBooking', { ...b, Status: status });
+    saving--;
+    applyData(fresh);
+    toast(`✓ ${b.Pet} ${done}`);
+    return true;
+  } catch (err) {
+    saving--;
+    data = before; render();
+    toast(`✗ Not saved — ${b.Pet} was not ${done}`);
+    (errorEl || $('notice')).textContent = err.message;
+    return false;
+  }
 }
 
 /* ---------- Booking summary ---------- */
@@ -1543,29 +1579,52 @@ $('grid').onclick = async e => {
 $('grid').onkeydown = e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.cage')) { e.preventDefault(); e.target.click(); } };
 async function toggleCage(name, disable, button) {
   if (disable && !(await askConfirm(`Disable cage ${name}? It can't be booked until you enable it again.`, 'Disable cage', true))) return;
-  button.disabled = true;
   $('notice').textContent = '';
-  try { data = await call('setCageDisabled', { Cage: name, disabled: disable }); render(); }
-  catch (err) { $('notice').textContent = err.message; button.disabled = false; }
+  // Instant: a cage with a current or upcoming booking can't be disabled — say so straight away;
+  // otherwise update the screen at once and let Google double-check in the background.
+  if (disable) {
+    const busyB = data.bookings.filter(x => x.Cage === name && isActive(x)).sort((x, y) => x['Check in'].localeCompare(y['Check in']));
+    if (busyB.length) { $('notice').textContent = `Cage ${name} has a current or upcoming booking (${busyB[0].Pet}, ${String(busyB[0]['Check in']).slice(0, 10)}). Move or cancel it first.`; return; }
+  }
+  const before = data;
+  data = { ...data, cages: data.cages.map(c => (c.Cage === name ? { ...c, Disabled: disable ? true : '' } : c)) };
+  render();
+  saving++;
+  try {
+    const fresh = await call('setCageDisabled', { Cage: name, disabled: disable });
+    saving--;
+    applyData(fresh);
+    toast(`✓ Cage ${name} ${disable ? 'disabled' : 'enabled'}`);
+  } catch (err) {
+    saving--;
+    data = before; render();
+    $('notice').textContent = err.message;
+  }
 }
 $('records').onclick = e => { const row = e.target.closest('[data-booking]'); if (row) openView(row.dataset.booking); };
 $('new').onclick = $('new2').onclick = () => openBooking();
 $('close').onclick = () => $('editor').close();
-$('refresh').onclick = refresh;
+$('refresh').onclick = () => refresh(true);
 $('day').value = today();
 // The app always starts on the PIN screen (or "Create staff PIN" if none exists yet).
 async function start() {
   if (window.API_URL) {
-    $('lock').hidden = false;
-    $('lockText').textContent = 'Connecting…';
-    try { window.PIN_ENABLED = (await call('pinStatus')).enabled; }
-    catch (err) { $('lockText').textContent = err.message; return; }
+    // Show the PIN screen straight away; ask Google in the background whether a PIN exists.
+    // That first request also wakes Google up, so the unlock right after is quicker.
+    window.PIN_ENABLED = true;
+    renderPinStatus();
+    lockApp();
+    try {
+      const st = await call('pinStatus');
+      if (!st.enabled) { window.PIN_ENABLED = false; renderPinStatus(); if (locked) lockApp(); }
+    } catch (err) { if (locked) $('pinError').textContent = err.message; }
+    return;
   }
   renderPinStatus();
   lockApp();
 }
 start();
-setInterval(() => { if (!locked && !document.querySelector('dialog[open]')) refresh(); }, 60000);
+setInterval(() => { if (!locked && !saving && !document.querySelector('dialog[open]')) refresh(); }, 60000);
 $('lockNow').onclick = () => lockApp();
 
 function renderPinStatus() {
